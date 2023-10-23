@@ -19,7 +19,18 @@ package riscv_pkg is
   -- MAIN PARAMETERS
   ------------------------------------------------------------------------------
   constant XLEN      : positive := 32;
+  constant BYTE      : positive := 8;
+  constant ADDR_INCR : positive := integer(XLEN / BYTE);
+  constant LSB       : natural  := integer(ceil(log2(real(XLEN / BYTE))));
+  
+  constant MEM_ADDR_WIDTH : positive := 9;
+  constant RESET_VECTOR   : natural  := 16#00000000#;
+  constant RESET : std_logic_vector(XLEN-1 downto 0) := std_logic_vector(to_unsigned(RESET_VECTOR, XLEN));
+  
   constant REG_WIDTH : positive := 5;
+  constant REG_NB    : positive := 2**REG_WIDTH;
+  constant REG_X0    : std_logic_vector(REG_WIDTH-1 downto 0) := "00000";
+  constant JUMP_MASK : std_logic_vector(XLEN-1 downto 0)      := X"FFFFFFFE";  
 
   ------------------------------------------------------------------------------
   --  INSTRUCTION FORMATS
@@ -32,6 +43,14 @@ package riscv_pkg is
   -- ALU
   ------------------------------------------------------------------------------
   constant ALUOP_WIDTH : natural := 3;
+  constant ALUOP_ADD   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "000";
+  constant ALUOP_SL    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "001";
+  constant ALUOP_SR    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "010";
+  constant ALUOP_SLT   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "011";
+  constant ALUOP_XOR   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "100";
+  constant ALUOP_OR    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "101";
+  constant ALUOP_AND   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "110";
+  constant ALUOP_OTHER : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "111";
 
   ------------------------------------------------------------------------------
   -- COMPONENTS
