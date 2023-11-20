@@ -61,7 +61,7 @@ mem:
     la  sp, _STACK                    // x2  = 0x000007FC
     la  gp, _HEAP                     // x3  = 0x000003FC
     la  tp, _HEAP                     // x4  = 0x000003FC
-    sw  a0, -4(sp)                    // DMEM[1FE] = 0x0FFF80F0
+    sw  a0, -4(sp)                    // DMEM[7F8] = 0x0FFF80F0
     lw  a1, -4(sp)                    // x11 = 0x0FFF80F0
 
     nop
@@ -96,7 +96,7 @@ next:
  ******************************************************************************/
 fwd:
     addi sp, sp, -8                 // x2  = 0x000007F4
-    sw   sp, 0(sp)                  // DMEM[1FD] = 0x000007F4
+    sw   sp, 0(sp)                  // DMEM[7F4] = 0x000007F4
     lw   a0, 0(sp)                  // x10 = 0x000007F4
     lw   a1, 0(a0)                  // x11 = 0x000007F4
 
