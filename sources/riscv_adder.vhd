@@ -18,8 +18,9 @@ use ieee.numeric_std.all;
 entity half_adder is
 port (
   a,b     : in     std_logic;
-  sum,carry   : out     std_logic;
-end adder_half_unsigned_reg;
+  sum,carry   : out     std_logic
+);
+end entity half_adder;
 
 architecture beh1 of half_adder is
 
@@ -33,6 +34,9 @@ end beh1;
 	-----------------------------------------------------------------------
 	-- Description 	adder with ripple-carry
 	-----------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity riscv_adder is
   generic (
@@ -50,16 +54,24 @@ end entity riscv_adder;
 architecture beh2 of riscv_adder is
 --------------------------------------
 --------- COMPLETE FROM HERE ---------
+    component half_adder is
+        port (
+           	a,b     : in     std_logic;
+  		sum, carry   : out     std_logic
+
+        );
+    end component;
+
 -- declaration de signals
-signal extend_a std_logic_vector(N downto 0);
-signal extend_b std_logic_vector(N downto 0);
-signal complement_b std_logic_vector(N downto 0);
+signal extend_a : std_logic_vector(N downto 0);
+signal extend_b : std_logic_vector(N downto 0);
+signal complement_b : std_logic_vector(N downto 0);
 
-signal low_a std_logic_vector(N-1 downto 0);
-signal low_b std_logic_vector(N-1 downto 0);
+signal low_a : std_logic_vector(N-1 downto 0);
+signal low_b : std_logic_vector(N-1 downto 0);
 
-signal carry_high std_logic_vector(N-1 downto 0);
-signal carry_low std_logic_vector(N-1 downto 0);
+signal carry_high : std_logic_vector(N-2 downto 0);
+signal carry_low : std_logic_vector(N-2 downto 0);
 
 
 begin
@@ -78,12 +90,20 @@ begin
 
 	first_adder: half_adder port map (a=>extend_a(0), b=>extend_b(0), sum=>o_sum(0), carry => low_a(0));
 
-	generic_adder : for i in 1 to N generate
+	generic_adder : for i in 1 to N-1 generate
 	
-		adder_high: half_adder portmap(a=>extend_a(i)	, b=>extend_b(i), sum=>low_b(i-1)	, carry => carry_high(i-1));
-		adder_low : half_adder portmap(a=>low_a(i)	, b=>low_b(i)	, sum=>sum(i)		, carry => carry_low(i-1));
-		low_b(i) <= carry_high(i-1) or carry_low(i-1);
+		adder_high: half_adder port map (a=>extend_a(i),
+					         b=>extend_b(i),
+					         sum=>low_b(i-1),
+					         carry => carry_high(i-1));
 
-	end generic_adder;
+		adder_low : half_adder port map(a => low_a(i-1),
+					        b => low_b(i-1),
+					        sum => o_sum(i),
+					        carry => carry_low(i-1));
+
+		low_a(i) <= carry_high(i-1) or carry_low(i-1);
+
+	end generate generic_adder;
 
 end architecture beh2;

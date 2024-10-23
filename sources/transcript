@@ -12,3 +12,142 @@
 # //  is prohibited from disclosure under the Trade Secrets Act,
 # //  18 U.S.C. Section 1905.
 # //
+# Load canceled
+# reading modelsim.ini
+# Loading project RISCV-P
+vsim -64 work.tb_riscv_adder
+# vsim -64 work.tb_riscv_adder 
+# Start time: 14:06:17 on Oct 23,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(100): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(101): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(105): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Note: Vopt Compiler exiting
+# ** Error: (vopt-2064) Compiler back-end code generation process terminated with code 2.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=4, Warnings=0.
+# Error loading design
+# End time: 14:06:17 on Oct 23,2024, Elapsed time: 0:00:00
+# Errors: 4, Warnings: 1
+# reading modelsim.ini
+# Loading project RISCV-P
+vsim -64 work.tb_riscv_adder
+# vsim -64 work.tb_riscv_adder 
+# Start time: 14:07:27 on Oct 23,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(100): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(101): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(105): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Note: Vopt Compiler exiting
+# ** Error: (vopt-2064) Compiler back-end code generation process terminated with code 2.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=4, Warnings=0.
+# Error loading design
+# End time: 14:07:27 on Oct 23,2024, Elapsed time: 0:00:00
+# Errors: 4, Warnings: 1
+# Compile of dpm.vhd was successful.
+# Compile of riscv_adder.vhd was successful.
+# Compile of riscv_alu.vhd was successful.
+# Compile of riscv_pc.vhd was successful.
+# Compile of riscv_pkg.vhd was successful.
+# Compile of riscv_rf.vhd was successful.
+# Compile of tb_riscv_pc.vhd was successful with warnings.
+# Compile of tb_riscv_rf.vhd was successful.
+# Compile of tb_riscv_adder.vhd failed with 7 errors.
+# Compile of tb_riscv_alu.vhd was successful with warnings.
+# 10 compiles, 1 failed with 7 errors.
+# reading modelsim.ini
+# Loading project RISCV-P
+# Compile of tb_riscv_adder.vhd failed with 7 errors.
+# Compile of tb_riscv_adder.vhd was successful with warnings.
+vsim -64 work.riscv_core_tb
+# vsim -64 work.riscv_core_tb 
+# Start time: 14:12:35 on Oct 23,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Error: (vopt-13130) Failed to find design unit riscv_core_tb.
+#         Searched libraries:
+#             work
+# Optimization failed
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=1, Warnings=0.
+# Error loading design
+# End time: 14:12:36 on Oct 23,2024, Elapsed time: 0:00:01
+# Errors: 1, Warnings: 4
+vsim -64 work.tb_riscv_adder -t ps
+# vsim -64 work.tb_riscv_adder -t ps 
+# Start time: 14:13:07 on Oct 23,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(100): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(101): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(105): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Note: Vopt Compiler exiting
+# ** Error: (vopt-2064) Compiler back-end code generation process terminated with code 2.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=4, Warnings=0.
+# Error loading design
+# End time: 14:13:07 on Oct 23,2024, Elapsed time: 0:00:00
+# Errors: 4, Warnings: 1
+# Compile of dpm.vhd was successful.
+# Compile of riscv_adder.vhd was successful.
+# Compile of riscv_alu.vhd was successful.
+# Compile of riscv_pc.vhd was successful.
+# Compile of riscv_pkg.vhd was successful.
+# Compile of riscv_rf.vhd was successful.
+# Compile of tb_riscv_pc.vhd was successful with warnings.
+# Compile of tb_riscv_rf.vhd was successful.
+# Compile of tb_riscv_adder.vhd was successful with warnings.
+# Compile of tb_riscv_alu.vhd was successful with warnings.
+# 10 compiles, 0 failed with no errors.
+vsim -64 -t ps work.tb_riscv_adder
+# vsim -64 -t ps work.tb_riscv_adder 
+# Start time: 14:16:18 on Oct 23,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Error: /export/tmp/8304_9/lab2/sources/riscv_adder.vhd(105): (vopt-1152) Index value 32 is out of index range 31 downto 0 of ieee.std_logic_1164.STD_LOGIC_VECTOR.
+# ** Note: Vopt Compiler exiting
+# ** Error: (vopt-2064) Compiler back-end code generation process terminated with code 2.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=2, Warnings=0.
+# Error loading design
+# End time: 14:16:19 on Oct 23,2024, Elapsed time: 0:00:01
+# Errors: 2, Warnings: 2
+# Compile of dpm.vhd was successful.
+# Compile of riscv_adder.vhd was successful.
+# Compile of riscv_alu.vhd was successful.
+# Compile of riscv_pc.vhd was successful.
+# Compile of riscv_pkg.vhd was successful.
+# Compile of riscv_rf.vhd was successful.
+# Compile of tb_riscv_pc.vhd was successful with warnings.
+# Compile of tb_riscv_rf.vhd was successful.
+# Compile of tb_riscv_adder.vhd was successful with warnings.
+# Compile of tb_riscv_alu.vhd was successful with warnings.
+# 10 compiles, 0 failed with no errors.
+vsim -64 -t ps work.tb_riscv_adder
+# vsim -64 -t ps work.tb_riscv_adder 
+# Start time: 14:21:54 on Oct 23,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Warning: /export/tmp/8304_9/lab2/simulation/tb_riscv_adder.vhd(89): (vopt-1626) TO_INTEGER function paramater's size (33) is out of range (>32 bits). Result is truncated.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.numeric_std(body)
+# Loading work.tb_riscv_adder(testbench)#1
+add wave  \
+sim:/tb_riscv_adder/i_a
+add wave -position insertpoint  \
+sim:/tb_riscv_adder/i_b
+add wave -position insertpoint  \
+sim:/tb_riscv_adder/i_a
+add wave -position insertpoint  \
+sim:/tb_riscv_adder/i_sign
+add wave -position insertpoint  \
+sim:/tb_riscv_adder/i_sub
+add wave -position insertpoint  \
+sim:/tb_riscv_adder/o_sum
+add wave -position insertpoint  \
+sim:/tb_riscv_adder/clock_period
+# Load canceled
+step -out
+step -over
+add wave  \
+sim:/tb_riscv_adder/i_a
+run -all
+# ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
+#    Time: 20 ns  Iteration: 0  Instance: /tb_riscv_adder
+# ** Note: o_sum = 0
+#    Time: 20 ns  Iteration: 0  Instance: /tb_riscv_adder
