@@ -21,4 +21,25 @@ entity riscv_core is
 end entity riscv_core;
 
 architecture beh of riscv_core is
+
+--Pipeline 5 blocks
+-- 1 Instruction Fetch 
+    -- PC
+    -- 1 registre d'etat
+-- 2 Decode
+    -- etape complexe
+-- 3 Execute
+    -- pc_transfert
+    -- ALU
+    -- Adder
+    -- 2 registres
+-- 4 Memory access
+    -- 1 Memory (load_data)
+    -- 3 registre (alu_result, wb, rd_addr)
+-- 5 Write-Back
+    -- 1 multiplexeur 
+
+
+
+
 end architecture beh;
