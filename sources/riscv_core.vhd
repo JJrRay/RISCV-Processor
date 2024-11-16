@@ -61,6 +61,16 @@ architecture beh of riscv_core is
     signal opcode  : std_logic_vector(6 downto 0)
     signal funct3  : std_logic_vector(2 downto 0)
     signal funct7  : std_logic_vector(6 downto 0)
+    -- (ID) Signals decode
+    signal branch  : std_logic;
+    signal jump    : std_logic;
+    signal rw      : std_logic;
+    signal wb      : std_logic;
+    signal arith   : std_logic;
+    signal sign    : std_logic;
+    signal imm     : std_logic_vector(19,0);
+    signal src_imm : std_logic;
+    signal alu_op  : std_logic_vector(ALUOP_WIDTH-1 downto 0);
 
 
 begin 
@@ -123,47 +133,109 @@ begin
     addr_r2 : instr(24 down to 20);
     funct7  : instr(31 downto 25);
     -- ID Decode : Decode opcode,funct3 and funct7 for EX
+-- Constants for ALU Operations
+constant ALUOP_WIDTH : natural := 3;
+constant ALUOP_ADD   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "000";
+constant ALUOP_SL    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "001";
+constant ALUOP_SR    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "010";
+constant ALUOP_SLT   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "011";
+constant ALUOP_XOR   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "100";
+constant ALUOP_OR    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "101";
+constant ALUOP_AND   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "110";
+constant ALUOP_OTHER : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "111";
 
-    when "0110011" =>  -- R-type opcode (ALU operations)
-        -- decode funct3, funct7 to identify ALU operation
-        case decoded_funct3 is
-            when "000" =>  -- ADD or SUB
-                if decoded_funct7 = "0000000" then
-                    alu_op <= "000";  -- ADD
-                elsif decoded_funct7 = "0100000" then
-                    alu_op <= "001";  -- SUB
-                else
-                    alu_op <= "111";  -- Invalid (or other logic)
-                end if;
-            when "001" =>  -- SLL (Shift Left Logical)
-                alu_op <= "010";
-            when "010" =>  -- SLT (Set Less Than)
-                alu_op <= "011";
-            when "011" =>  -- SLTU (Set Less Than Unsigned)
-                alu_op <= "100";
-            when "100" =>  -- XOR
-                alu_op <= "101";
-            when "101" =>  -- SRL or SRA (Shift Right Logical/Arithmetic)
-                if decoded_funct7 = "0000000" then
-                    alu_op <= "110";  -- SRL
-                elsif decoded_funct7 = "0100000" then
-                    alu_op <= "111";  -- SRA
-                end if;
-            when "110" =>  -- OR
-                alu_op <= "1000";
-            when "111" =>  -- AND
-                alu_op <= "1001";
-            when others => 
-                alu_op <= "1111";  -- Invalid ALU operation (error state or other logic)
-        end case;
-    when others => 
-        --Handle other opcodes (e.g., I-type, B-type, etc.)
-        alu_op <= "1111";  -- Invalid opcode (error state or other logic)
+-- Process for decoding signals
+process (opcode, funct3, funct7)
+begin
+    -- Default values
+    branch  <= '0';
+    jump    <= '0';
+    rw      <= '0';
+    wb      <= '0';
+    arith   <= '0';
+    sign    <= '0';
+    imm     <= (others => '0'); // imm handling is still generic must customise to documentation
+    src_imm <= '0';
+    alu_op  <= ALUOP_OTHER;  -- Default ALU operation to "other" for undefined cases
+
+    -- Decoding logic based on opcode
+    case opcode is
+        -- R-type instructions (Arithmetic operations)
+        when "0110011" =>  -- R-type opcode (add, sub, and etc.)
+            arith   <= '1';
+            rw      <= '1'; -- write to register
+            wb      <= '1'; -- write-back enabled
+            src_imm <= '0'; -- no immediate, uses rs1 and rs2 for operands
+
+            case funct3 is
+                when "000" => -- ADD/SUB
+                    case funct7 is
+                        when "0000000" =>  -- ADD
+                            alu_op <= ALUOP_ADD;
+                        when "0100000" =>  -- SUB
+                            alu_op <= ALUOP_ADD;  -- ALU subtraction handled with addition
+                        when others => 
+                            alu_op <= ALUOP_OTHER;  -- Unknown funct7
+                    end case;
+                when "001" => -- SLL
+                    alu_op <= ALUOP_SL;
+                when "010" => -- SLT
+                    alu_op <= ALUOP_SLT;
+                when "011" => -- SLTU
+                    alu_op <= ALUOP_SLT;  -- For unsigned, the logic might change depending on your implementation
+                when "100" => -- XOR
+                    alu_op <= ALUOP_XOR;
+                when "101" => -- SRL/SRA
+                    case funct7 is
+                        when "0000000" =>  -- SRL
+                            alu_op <= ALUOP_SR;
+                        when "0100000" =>  -- SRA
+                            alu_op <= ALUOP_SR;  -- Adjust according to how you handle SRA
+                        when others => 
+                            alu_op <= ALUOP_OTHER;
+                    end case;
+                when "110" => -- OR
+                    alu_op <= ALUOP_OR;
+                when "111" => -- AND
+                    alu_op <= ALUOP_AND;
+                when others => 
+                    alu_op <= ALUOP_OTHER;
+            end case;
+            
+        -- I-type instructions (Immediate Arithmetic or Load)
+        when "0000011" =>  -- Load (opcode for I-type load instructions)
+            rw      <= '1';  -- write to register
+            wb      <= '1';  -- write-back enabled
+            imm     <= std_logic_vector(to_unsigned(signed(funct3), 20));  -- Example: immediate decoding
+            alu_op  <= ALUOP_ADD; -- ALU operation for load (typically address calculation)
+        
+        when "0010011" =>  -- I-type Arithmetic
+            arith   <= '1';  -- arithmetic operation
+            rw      <= '1';  -- write to register
+            wb      <= '1';  -- write-back enabled
+            imm     <= std_logic_vector(to_unsigned(signed(funct3), 20)); -- Example immediate decoding
+            alu_op  <= ALUOP_ADD; -- ALU operation for arithmetic (ADD, SUB, etc.)
+        
+        -- Branch instructions
+        when "1100011" =>  -- Branch instructions
+            branch  <= '1';  -- enable branching
+            alu_op  <= ALUOP_ADD;  -- comparison typically handled with subtraction (e.g., BEQ, BNE)
+        
+        -- Jump instructions
+        when "1101111" =>  -- Jump (JAL)
+            jump    <= '1';
+            rw      <= '1';  -- write to register (return address)
+            wb      <= '1';  -- write-back enabled
+            alu_op  <= ALUOP_ADD; -- ALU operation for jump (address calculation)
+        
+        -- Default case for unknown opcodes
+        when others => 
+            null;  -- undefined behavior for unknown opcodes
     end case;
-
-        end if;
-    end if;
+    
 end process;
+
+
     -- ID/EX Pipeline Register: Store instrcution decoded in the ID stage
 
 
