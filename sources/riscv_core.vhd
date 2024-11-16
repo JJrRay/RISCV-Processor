@@ -133,16 +133,6 @@ begin
     addr_r2 : instr(24 down to 20);
     funct7  : instr(31 downto 25);
     -- ID Decode : Decode opcode,funct3 and funct7 for EX
--- Constants for ALU Operations
-constant ALUOP_WIDTH : natural := 3;
-constant ALUOP_ADD   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "000";
-constant ALUOP_SL    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "001";
-constant ALUOP_SR    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "010";
-constant ALUOP_SLT   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "011";
-constant ALUOP_XOR   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "100";
-constant ALUOP_OR    : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "101";
-constant ALUOP_AND   : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "110";
-constant ALUOP_OTHER : std_logic_vector(ALUOP_WIDTH-1 downto 0) := "111";
 
 -- Process for decoding signals
 process (opcode, funct3, funct7)
