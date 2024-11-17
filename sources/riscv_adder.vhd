@@ -67,11 +67,11 @@ signal extend_a : std_logic_vector(N downto 0);
 signal extend_b : std_logic_vector(N downto 0);
 signal complement_b : std_logic_vector(N downto 0);
 
-signal low_a : std_logic_vector(N-1 downto 0);
-signal low_b : std_logic_vector(N-1 downto 0);
+signal low_a : std_logic_vector(N  downto 0);
+signal low_b : std_logic_vector(N downto 0);
 
-signal carry_high : std_logic_vector(N-2 downto 0);
-signal carry_low : std_logic_vector(N-2 downto 0);
+signal carry_high : std_logic_vector(N downto 0);
+signal carry_low : std_logic_vector(N downto 0);
 
 
 begin
@@ -84,26 +84,33 @@ begin
 
 -- 2'complement
 
-	complement_b <= std_logic_vector(unsigned(extend_b NAND '1') + '1') when i_sub = '1' else complement_b;
-
+	complement_b <= std_logic_vector(not(signed(extend_b))+1) when i_sub= '1' else extend_b;
+carry_high(0)<='0';
+carry_low(0)<='0';
+low_b(0)<='0';
 -- adder
+	gen_adder:for i in 0 to N generate 
 
-	first_adder: half_adder port map (a=>extend_a(0), b=>extend_b(0), sum=>o_sum(0), carry => low_a(0));
+		first_adder: half_adder port map (a=>extend_a(0),
+ 					 	 b=>extend_b(0),
+ 					 	 sum=>o_sum(0),
+ 					 	 carry => low_a(0));
 
-	generic_adder : for i in 1 to N-1 generate
+		generic_adder : if (i > 0 and i <= N)  generate
 	
-		adder_high: half_adder port map (a=>extend_a(i),
-					         b=>extend_b(i),
-					         sum=>low_b(i-1),
-					         carry => carry_high(i-1));
+			adder_high: half_adder port map (a=>extend_a(i),
+					     	    b=>extend_b(i),
+					            sum=>low_b(i),
+					            carry => carry_high(i));
 
-		adder_low : half_adder port map(a => low_a(i-1),
-					        b => low_b(i-1),
-					        sum => o_sum(i),
-					        carry => carry_low(i-1));
+			adder_low : half_adder port map(a => low_a(i-1),
+					        	b => low_b(i),
+					        	sum => o_sum(i),
+					        	carry => carry_low(i));
 
-		low_a(i) <= carry_high(i-1) or carry_low(i-1);
+			low_a(i) <= carry_high(i) or carry_low(i);
 
-	end generate generic_adder;
+		end generate generic_adder;
+	end generate gen_adder;
 
 end architecture beh2;
