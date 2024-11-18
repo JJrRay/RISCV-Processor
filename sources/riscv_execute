@@ -1,0 +1,39 @@
+library work;
+use work.riscv_pkg.all;
+
+entity riscv_execute is
+    port (
+    i_rstn : in std_logic;
+    i_clk : in std_logic;
+    o_flush : out std_logic;
+    o_transfer : out std_logic;
+    o_target : out std_logic;
+    o_stall : out std_logic;
+    o_alu_result : out std_logic_vector(out std_logic_vector(XLEN-1 downto 0));
+    o_store_data : out std_logic_vector(XLEN-1 downto 0);
+    i_rs1_data in std_logic_vector(XLEN-1 downto 0);
+    i_rs2_data in std_logic_vector(XLEN-1 downto 0);
+    i_branch : in std_logic;
+    i_jump : in std_logic;
+    i_rw : in std_logic;
+    i_wb : in std_logic;
+    i_arith : in std_logic;
+    i_sign : in std_logic;
+    i_imm : in std_logic_vector(19,0);
+    i_src_imm : in std_logic;
+    i_alu_op :  in std_logic_vector(ALUOP_WIDTH-1 downto 0)
+    i_pc : in std_logic_vector(XLEN-1 downto 0));
+end entity riscv_execute;
+
+architecture beh of riscv_execute is
+-- Multiplexer + extender into alu_rs2
+
+-- Alu instantiation
+
+-- pc_transfer block
+
+-- Adder instantiation
+
+-- Pipeline Register EX/ME
+
+end architecture beh;

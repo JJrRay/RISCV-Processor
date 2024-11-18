@@ -1,7 +1,7 @@
 library work;
 use work.riscv_pkg.all;
 
-entity riscv_core is
+entity riscv_decode is
     port (
     i_rstn : in std_logic;
     i_clk : in std_logic;
@@ -21,9 +21,9 @@ entity riscv_core is
     o_imm : out std_logic_vector(19,0);
     o_src_imm : out std_logic;
     o_alu_op : std_logic_vector(ALUOP_WIDTH-1 downto 0));
-end entity riscv_core;
+end entity riscv_decode;
 
-architecture beh of riscv_core is
+architecture beh of riscv_decode is
 -- Component declaration for all riscv_modules are in riscv_pkg
 
 
