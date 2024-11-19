@@ -1,0 +1,154 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+-- Define the package if necessary (e.g., ALU operations, etc.)
+library work;
+use work.riscv_pkg.all;
+
+entity riscv_decode_tb is
+end entity riscv_decode_tb;
+
+architecture behavior of riscv_decode_tb is
+
+  -- Testbench signals
+  signal i_instr      : std_logic_vector(XLEN-1 downto 0);
+  signal i_rd_data    : std_logic_vector(XLEN-1 downto 0);
+  signal i_rd_addr    : std_logic_vector(REG_WIDTH-1 downto 0);
+  signal i_wb         : std_logic;
+  signal i_flush      : std_logic;
+  signal i_rstn       : std_logic;
+  signal i_clk        : std_logic;
+  signal o_rs1_data   : std_logic_vector(XLEN-1 downto 0);
+  signal o_rs2_data   : std_logic_vector(XLEN-1 downto 0);
+  signal o_branch     : std_logic;
+  signal o_jump       : std_logic;
+  signal o_rw         : std_logic;
+  signal o_we         : std_logic;
+  signal o_wb         : std_logic;
+  signal o_arith      : std_logic;
+  signal o_sign       : std_logic;
+  signal o_shamt      : std_logic_vector(4 downto 0);
+  signal o_alu_op     : std_logic_vector(ALUOP_WIDTH-1 downto 0);
+  signal o_imm        : std_logic_vector(XLEN-1 downto 0);
+  signal o_src_imm    : std_logic;
+  signal o_pc         : std_logic_vector(XLEN-1 downto 0);
+  signal o_rd_addr    : std_logic_vector(REG_WIDTH-1 downto 0);
+
+  -- Define clock period
+  constant clk_period : time := 20 ns;
+
+begin
+  -- Instantiate the riscv_decode unit under test (UUT)
+  uut: entity work.riscv_decode
+    port map (
+      i_instr      => i_instr,
+      i_rd_data    => i_rd_data,
+      i_rd_addr    => i_rd_addr,
+      i_wb         => i_wb,
+      i_flush      => i_flush,
+      i_rstn       => i_rstn,
+      i_clk        => i_clk,
+      o_rs1_data   => o_rs1_data,
+      o_rs2_data   => o_rs2_data,
+      o_branch     => o_branch,
+      o_jump       => o_jump,
+      o_rw         => o_rw,
+      o_we         => o_we,
+      o_wb         => o_wb,
+      o_arith      => o_arith,
+      o_sign       => o_sign,
+      o_shamt      => o_shamt,
+      o_alu_op     => o_alu_op,
+      o_imm        => o_imm,
+      o_src_imm    => o_src_imm,
+      o_pc         => o_pc,
+      o_rd_addr    => o_rd_addr
+    );
+
+  -- Clock process (generates the clock signal)
+  clock_gen: process
+  begin
+    i_clk <= '0';
+    wait for clk_period / 2;
+    i_clk <= '1';
+    wait for clk_period / 2;
+  end process;
+
+  -- Stimulus process
+  stimulus: process
+  begin
+    -- Initialize signals
+    i_rstn <= '0';
+    i_flush <= '0';
+    i_wb <= '0';
+    i_rd_data <= (others => '0');
+    i_rd_addr <= (others => '0');
+    i_instr <= (others => '0');
+    
+    -- Apply reset
+    wait for 50 ns;
+    i_rstn <= '1';
+
+    -- Test 1: Test R-Type Instruction (e.g., ADD)
+    i_instr <= "01100110000000000000000000000000"; -- ADD opcode
+    wait for clk_period;
+    
+    -- Check ALU operation for ADD
+    assert (o_alu_op = ALUOP_ADD) report "Error: ALU operation mismatch for ADD" severity error;
+
+    -- Test 2: Test I-Type Instruction (e.g., ADDI)
+    i_instr <= "00100110000000000000000000000000"; -- ADDI opcode
+    wait for clk_period;
+    
+    -- Check ALU operation for ADDI
+    assert (o_alu_op = ALUOP_ADD) report "Error: ALU operation mismatch for ADDI" severity error;
+
+    -- Test 3: Test Branch Instruction (e.g., BEQ)
+    i_instr <= "11000110000000000000000000000000"; -- BEQ opcode
+    wait for clk_period;
+    
+    -- Check branch signal for BEQ
+    assert (o_branch = '1') report "Error: Branch signal mismatch for BEQ" severity error;
+
+    -- Test 4: Test Jump Instruction (e.g., JAL)
+    i_instr <= "11011110000000000000000000000000"; -- JAL opcode
+    wait for clk_period;
+    
+    -- Check jump signal for JAL
+    assert (o_jump = '1') report "Error: Jump signal mismatch for JAL" severity error;
+
+    -- Test 5: Test Load Instruction (e.g., LW)
+    i_instr <= "00000110000000000000000000000000"; -- LW opcode
+    wait for clk_period;
+
+    -- Check wb signal for LW
+    assert (o_wb = '1') report "Error: Writeback signal mismatch for LW" severity error;
+
+    -- Test 6: Test Store Instruction (e.g., SW)
+    i_instr <= "01000110000000000000000000000000"; -- SW opcode
+    wait for clk_period;
+
+    -- Check we signal for SW
+    assert (o_we = '1') report "Error: Write enable signal mismatch for SW" severity error;
+
+    -- Test 7: Test I-Type Immediate Generation (e.g., SLTI)
+    i_instr <= "00100110010000000000000000000000"; -- SLTI opcode
+    wait for clk_period;
+
+    -- Check immediate value for SLTI
+    assert (o_imm = i_instr(30 downto 20)) report "Error: Immediate value mismatch for SLTI" severity error;
+
+    -- Test 8: Test Reset and Flush
+    i_flush <= '1';
+    wait for clk_period;
+
+    -- Assert reset behavior
+    assert (o_branch = '0') report "Error: o_branch not reset during flush" severity error;
+    assert (o_jump = '0') report "Error: o_jump not reset during flush" severity error;
+
+    -- Complete Testbench
+    wait;
+  end process;
+
+end architecture behavior;

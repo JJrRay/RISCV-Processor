@@ -14,44 +14,47 @@ entity riscv_fetch is
   o_imem_en 	 : out std_logic;
   o_imem_addr    : out std_logic_vector(XLEN-1 downto 0);	
   o_instruction  : out std_logic_vector(XLEN-1 downto 0);
-  o_pc			 : out std_logic_vector(XLEN-1 downto 0) -- EX //passthrough ID
+  o_pc			 : out std_logic_vector(XLEN-1 downto 0) -- EX //passthrough
   );
 end entity riscv_fetch;
 
 
 
-architecture beh of riscv_core is
-
-
+architecture beh of riscv_fetch is
 begin
-	o_imem_en <= '1';		
-	pc: component riscv_pc
-		port map(
-			i_clk =>  i_clk,
-			i_rstn => i_rstn, 
-			i_stall => i_stall,
-			i_transfert => i_transfert,
-			i_target => i_target,
-			o_pc => o_imem_addr
-			);
-	process(i_clk, i_rstn,i_flush)
-	begin
-	  if i_rstn='0' then
-	      o_instruction <= NOP; 
-	  elsif rising_edge(i_clk) then
-	    if i_flush = '0' then	
-		    if i_stall = '0' then
-                o_pc <= o_imem_addr;  
-                o_instruction <= i_imem_read;
-            else
+    -- Memory enable is set to 1 when the instruction memory is being accessed
+    o_imem_en <= '1' when (i_flush = '0' and i_stall = '0' and i_transfert = '1') else '0';
+  
+    -- PC component instantiation
+    pc: component riscv_pc
+        port map(
+            i_clk => i_clk,
+            i_rstn => i_rstn,
+            i_stall => i_stall,
+            i_transfert => i_transfert,
+            i_target => i_target,
+            o_pc => o_imem_addr
+        );
+  
+    -- Fetch logic for instruction fetching
+    process(i_clk, i_rstn, i_flush, i_stall)
+    begin
+        if i_rstn = '0' then
+            -- Reset condition: Clear instruction and set PC to 0
+            o_instruction <= (others => '0');
+            o_pc <= (others => '0'); =
+        elsif rising_edge(i_clk) then
+            if i_flush = '1' then
+                -- Flush condition
+                o_instruction <= (others => '0');
+            elsif i_stall = '0' then
+                -- Normal operation
+                o_pc <= o_imem_addr;  -- Pass program counter
+                o_instruction <= i_imem_read;  -- Fetch
+                -- Stall 
                 o_instruction <= o_instruction;
             end if;
-		else
-			o_instruction <= NOP;
-	    end if;		
-	  end if;
-	end process;
-
-
-
+        end if;
+    end process;
 end architecture beh;
+
