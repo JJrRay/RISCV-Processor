@@ -218,26 +218,7 @@ end component write_back;
   signal write_back_wb : std_logic;
   
 begin
-	--test bench
-	tb_fetch_pc	<= fetch_pc;
 	
-	tb_execute_pc <= decode_pc;	
-	tb_execute_src_imm <= decode_src_imm;
-	
-
-	tb_write_back_rw<= memory_rw;
-	tb_memory_we<= execute_we;
-
-	tb_execute_rs1_data <= decode_rs1_data;
-	tb_execute_rs2_data <= decode_rs2_data;
-	tb_decode_instruction <= fetch_instruction;
-	tb_memory_alu_result <= execute_alu_result;
-	tb_memory_store_data <= execute_store_data;
-	tb_write_back_rd_addr <=  write_back_rd_addr;
-	tb_write_back_wb <= write_back_wb;
-	tb_write_back_rd_data <= write_back_rd_data;
-	tb_write_back_alu_result <= memory_alu_result ;
-	tb_write_back_load_data <= i_dmem_read;
 	
 	--dpm
   --o_imem_en	<= '1';
@@ -258,8 +239,9 @@ begin
       i_rstn => i_rstn, 
       i_clk => i_clk, 
       o_imem_en => o_imem_en,
-	  o_imem_addr => o_imem_addr,
-      o_pc => fetch_pc,
+	    o_imem_addr => o_imem_addr,
+      -- Pipeline Register
+      o_pc => fetch_pc, 
       o_instruction => fetch_instruction
     );
 
@@ -274,30 +256,23 @@ begin
       i_flush => execute_pc_transfert, 	 -- pc_transfert == flush 
       i_rstn => i_rstn, 
       i_clk => i_clk,
+      -- Register_File
       o_rs1_data => decode_rs1_data,
       o_rs2_data => decode_rs2_data,
+      -- Pipeline Register
       o_branch => decode_branch,
       o_jump => decode_jump, 
       o_rw => decode_rw,
       o_we => decode_we,
       o_wb => decode_wb,
-      o_imm => decode_imm,
-      o_src_imm => decode_src_imm,
-      o_rd_addr => decode_rd_addr,
-      o_pc => decode_pc,
       o_arith => decode_arith, 
       o_sign => decode_sign,
       o_shamt => decode_shamt, 
       o_alu_op => decode_alu_op,
-	  tb_rs1_addr => tb_decode_rs1_addr,
-  	  tb_rs2_addr => tb_decode_rs2_addr,
-	  tb_alu_op => tb_decode_alu_op,
-  	  tb_arith => tb_decode_arith,
-  	  tb_sign => tb_decode_sign,
-	  tb_decode_branch => tb_decode_branch,
-  	  tb_decode_jump => tb_decode_jump,
-	  tb_imm => tb_decode_imm
-  
+      o_imm => decode_imm,
+      o_src_imm => decode_src_imm,
+      o_rd_addr => decode_rd_addr,
+      o_pc => decode_pc, -- passthrough for ex
     );
 
   -- Instantiate execute stage
@@ -321,18 +296,18 @@ begin
       i_alu_op => decode_alu_op,
       i_arith => decode_arith,
       i_sign => decode_sign,
+      -- PC Transfer
       o_pc_transfert => execute_pc_transfert,
+      -- Pipeline Register
       o_alu_result => execute_alu_result,
       o_store_data => execute_store_data,
+      -- Adder
       o_pc_target => execute_pc_target,
+      -- To memory (not explicitly in PR)
       o_rw => execute_rw,
       o_we => execute_we,
       o_wb => execute_wb,
       o_rd_addr => execute_rd_addr,
-	  tb_execute_alu_result => tb_execute_alu_result,
-	  tb_pc_transfert 	=>  tb_execute_pc_transfert,
-	  tb_pc_target => tb_execute_pc_target,
-	  tb_imm => tb_execute_imm
     );
 
   -- Instantiate memory access stage

@@ -3,74 +3,54 @@ use work.riscv_pkg.all;
 
 entity riscv_fetch is
     port (
-    i_rstn : in std_logic;
-    i_clk : in std_logic;
-    o_instr     : out std_logic_vector(31 downto 0);             -- Program counter output 
-    i_stall     : in std_logic;                                     -- Stall signal
-    i_transfert : in std_logic;                                     -- Transfer signal
-    i_target    : in std_logic_vector(XLEN-1 downto 0);             -- Target address for jump
-    o_imem_en : out std_logic;
-    o_imem_addr : out std_logic_vector(8 downto 0);
-    i_imem_read : in std_logic_vector(31 downto 0);
-    );
+  i_target	     : in  std_logic_vector(XLEN-1 downto 0);
+  i_imem_read    : in  std_logic_vector(XLEN-1 downto 0);
+  i_transfert    : in  std_logic;
+  i_stall		 : in  std_logic;
+  i_flush		 : in  std_logic;
+  i_rstn		 : in  std_logic;
+  i_clk    	     : in  std_logic;  
+  
+  o_imem_en 	 : out std_logic;
+  o_imem_addr    : out std_logic_vector(XLEN-1 downto 0);	
+  o_instruction  : out std_logic_vector(XLEN-1 downto 0);
+  o_pc			 : out std_logic_vector(XLEN-1 downto 0) -- EX //passthrough ID
+  );
 end entity riscv_fetch;
 
 
 
 architecture beh of riscv_core is
--- Component declaration for all riscv_modules are in riscv_pkg
-
--- Signals Instruction Fetch
-    -- (IF) Signals for PC
-    signal pc        : std_logic_vector(XLEN-1 downto 0);             -- Program counter output 
-    
-    -- (IF) Signals for IMEM
-    signal imem_en   : std_logic;       
-
-    -- (IF/ID) Signals for Pipeline Register
-    signal instr :  std_logic_vector(31 downto 0);
 
 
-
-begin 
--- Instruction Fetch
-    -- IF Instantiate Program Counter from riscv_pkg
-    u_riscv_pc: riscv_pc
-        generic map (
-            RESET_VECTOR => 16#00000000#  -- Set the reset vector to 0x00000000
-        )
-        port map (
-            i_clk       => i_clk,           -- Clock signal
-            i_rstn      => i_rstn,          -- Reset (active low)
-            i_stall     => stall,         -- Stall signal (EX)
-            i_transfert => transfert,     -- Transfer signal (EX)
-            i_target    => target,        -- Target address (EX)
-            o_pc        => pc      -- Program counter output (imem)
-        );
-    o_imem_addr <= s_pc(MEM_ADDR_WIDTH-1 downto 0) --Assuming LSB
-    o_imem_en <= imem_en;
-   
-
--- IF/ID Pipeline Register: Store instruction fetched in the IF stage
-    process(i_clk)
-    begin
-        if rising_edge(i_clk, stall, flush) then
-            if flush = '1' then
-                -- On reset, clear the instruction register and valid signal
-                instr <= (others => '0');
-                imem_en <='0';
+begin
+	o_imem_en <= '1';		
+	pc: component riscv_pc
+		port map(
+			i_clk =>  i_clk,
+			i_rstn => i_rstn, 
+			i_stall => i_stall,
+			i_transfert => i_transfert,
+			i_target => i_target,
+			o_pc => o_imem_addr
+			);
+	process(i_clk, i_rstn,i_flush)
+	begin
+	  if i_rstn='0' then
+	      o_instruction <= NOP; 
+	  elsif rising_edge(i_clk) then
+	    if i_flush = '0' then	
+		    if i_stall = '0' then
+                o_pc <= o_imem_addr;  
+                o_instruction <= i_imem_read;
             else
-                if stall = '1' then
-                    instr <= instr;  -- Hold the instruction
-                    imem_en <='0';
-                else
-                    imem_en <='1';
-                    instr <= i_imem_read;     -- Fetch the instruction
-                end if;
+                o_instruction <= o_instruction;
             end if;
-        end if;
-    end process;
-    o_instr <= instr;
+		else
+			o_instruction <= NOP;
+	    end if;		
+	  end if;
+	end process;
 
 
 

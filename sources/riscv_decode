@@ -2,50 +2,60 @@ library work;
 use work.riscv_pkg.all;
 
 entity riscv_decode is
-    port (
-    i_rstn : in std_logic;
-    i_clk : in std_logic;
-    i_instr     : in std_logic_vector(31 downto 0);  
-    i_wb : in  std_logic;
-    i_rd_addr : in  std_logic_vector(REG_WIDTH-1 downto 0);
-    i_rd_data : in  std_logic_vector(REG_WIDTH-1 downto 0);
-    i_flush : in std_logic;
-    o_rs1_data out std_logic_vector(XLEN-1 downto 0);
-    o_rs2_data out std_logic_vector(XLEN-1 downto 0);
-    o_branch : out std_logic;
-    o_jump : out std_logic;
-    o_rw : out std_logic;
-    o_wb : out std_logic;
-    o_arith : out std_logic;
-    o_sign : out std_logic;
-    o_imm : out std_logic_vector(19,0);
-    o_src_imm : out std_logic;
-    o_alu_op : std_logic_vector(ALUOP_WIDTH-1 downto 0));
+     port (
+  i_instr		: in  std_logic_vector(XLEN-1 downto 0);
+  i_rd_data     : in  std_logic_vector(XLEN-1 downto 0);
+  i_rd_addr 	: in  std_logic_vector(REG_WIDTH -1 downto 0);  
+  i_wb 			: in  std_logic;
+  i_flush		: in  std_logic;
+  i_rstn		: in  std_logic;
+  i_clk 		: in  std_logic;
+  o_rs1_data 	: out std_logic_vector(XLEN-1 downto 0);
+  o_rs2_data 	: out std_logic_vector(XLEN-1 downto 0); 
+  o_branch		: out std_logic;
+  o_jump		: out std_logic;
+  o_rw 			: out std_logic;
+  o_we			: out std_logic;
+  o_wb			: out std_logic;  
+  o_arith		: out std_logic;
+  o_sign		: out std_logic;
+  o_shamt		: out std_logic_vector(4 downto 0);	
+  o_alu_op		: out std_logic_vector(ALUOP_WIDTH-1 downto 0);
+  o_imm			: out std_logic_vector(XLEN-1 downto 0);  
+  o_src_imm		: out std_logic;
+  o_pc			: out std_logic_vector(XLEN-1 downto 0);
+  o_rd_addr 	: out std_logic_vector(REG_WIDTH-1 downto 0)
+  ); 
 end entity riscv_decode;
 
 architecture beh of riscv_decode is
 -- Component declaration for all riscv_modules are in riscv_pkg
 
+signal opcode				: std_logic_vector(6 downto 0); 
+	signal funct3				: std_logic_vector(2 downto 0);
+	signal funct7				: std_logic_vector(6 downto 0);	
+	signal rs1_addr			: std_logic_vector(REG_WIDTH -1 downto 0);	 
+	signal rs2_addr			: std_logic_vector(REG_WIDTH -1 downto 0);
+	signal branch				: std_logic;
+  	signal jump				: std_logic;
+	signal rw 				: std_logic;
+	signal we				: std_logic;
+	signal wb				: std_logic;  
+	signal arith				: std_logic;
+	signal sign				: std_logic;
+	signal imm				: std_logic_vector(XLEN-1 downto 0);
+	signal src_imm			: std_logic;
+	signal pc				: std_logic_vector(XLEN-1 downto 0);
+	signal alu_op				: std_logic_vector(ALUOP_WIDTH-1 downto 0);
+	signal rs1_data_rf		: std_logic_vector(XLEN-1 downto 0);
+	signal rs2_data_rf		: std_logic_vector(XLEN-1 downto 0);
 
-
--- Signals Instruction Decode
-    -- (ID) Signals Register File 
-    signal addr_r1 : std_logic_vector(REG_WIDTH-1 downto 0);  -- Read address A
-    signal addr_r2 : std_logic_vector(REG_WIDTH-1 downto 0);  -- Read address B
-    -- (ID) Signals predecode
-    signal opcode  : std_logic_vector(6 downto 0)
-    signal funct3  : std_logic_vector(2 downto 0)
-    signal funct7  : std_logic_vector(6 downto 0)
-    -- (ID) Signals decode
-    signal branch  : std_logic;
-    signal jump    : std_logic;
-    signal rw      : std_logic;
-    signal wb      : std_logic;
-    signal arith   : std_logic;
-    signal sign    : std_logic;
-    signal imm     : std_logic_vector(19,0);
-    signal src_imm : std_logic;
-    signal alu_op  : std_logic_vector(ALUOP_WIDTH-1 downto 0);
+  	signal u_imm				: std_logic_vector(XLEN-1 downto 0);
+	signal j_imm				: std_logic_vector(XLEN-1 downto 0);
+	signal i_imm				: std_logic_vector(XLEN-1 downto 0);	
+	signal s_imm				: std_logic_vector(XLEN-1 downto 0);
+	signal b_imm				: std_logic_vector(XLEN-1 downto 0);
+	signal shamt				: std_logic_vector(SHAMT_WIDTH-1 downto 0);
 
 
 begin 
@@ -54,119 +64,210 @@ begin
 -- Instruction Decode
     -- ID Instantiate Register_file from riscv_pkg
     rf_inst : riscv_rf
-        port map (
-            i_clk     => i_clk,                    -- Clock
-            i_rstn    => i_rstn,                   -- Reset (active low)
-            i_we      => i_wb,                     -- Write enable
-            i_addr_r1 => addr_r1,                -- Read address 1
-            o_data_r1 => o_rs1_data,                -- Read data 1
-            i_addr_r2 => addr_r2,                -- Read address 2
-            o_data_r2 => o_rs2_data,                -- Read data 2
-            i_addr_w  => i_rd_addr,                 -- Write address
-            i_data_w  => i_rd_data                  -- Write data
-        );
-    -- ID predecode : split instr in rs1,rs2,opcode,funct3 and funct7
-    opcode  : instr(6 downto 0);
-    funct3  : instr(14 downto 12);
-    addr_r1 : instr(19 downto 15);
-    addr_r2 : instr(24 down to 20);
-    funct7  : instr(31 downto 25);
+        port map(
+			i_clk 	 => i_clk,
+			i_rstn 	 => i_rstn, 
+			i_we 	 => i_wb,
+			i_addr_ra => rs1_addr,
+			o_data_ra => rs1_data_rf,
+			i_addr_rb => rs2_addr,
+			o_data_rb => rs2_data_rf,
+			i_addr_w  => i_rd_addr,
+			i_data_w  => i_rd_data
+			); 
+    -- ID predecode : split instr in rs1,rs2,opcode,funct3 and funct7	 	
+	opcode	 		  <=  i_instr(6 downto 0);
+	funct3	 		  <=  i_instr(14 downto 12);
+	rs1_addr	 		  <=  i_instr(19 downto 15);
+	rs2_addr	 		  <=  i_instr(24 downto 20);
+	funct7	 		  <=  i_instr(31 downto 25);
     -- ID Decode : Decode opcode,funct3 and funct7 for EX
-
--- Process for decoding signals
-process (opcode, funct3, funct7)
+	
+    -- Alu_op based on opcode and funct3
+    process (opcode, funct3)
 begin
-    -- Default values
-    branch  <= '0';
-    jump    <= '0';
-    rw      <= '0';
-    wb      <= '0';
-    arith   <= '0';
-    sign    <= '0';
-    imm     <= (others => '0'); // imm handling is still generic must customise to documentation
-    src_imm <= '0';
-    alu_op  <= ALUOP_OTHER;  -- Default ALU operation to "other" for undefined cases
-
-    -- Decoding logic based on opcode
-    case opcode is
-        -- R-type instructions (Arithmetic operations)
-        when "0110011" =>  -- R-type opcode (add, sub, and etc.)
-            arith   <= '1';
-            rw      <= '1'; -- write to register
-            wb      <= '1'; -- write-back enabled
-            src_imm <= '0'; -- no immediate, uses rs1 and rs2 for operands
-
-            case funct3 is
-                when "000" => -- ADD/SUB
-                    case funct7 is
-                        when "0000000" =>  -- ADD
-                            alu_op <= ALUOP_ADD;
-                        when "0100000" =>  -- SUB
-                            alu_op <= ALUOP_ADD;  -- ALU subtraction handled with addition
-                        when others => 
-                            alu_op <= ALUOP_OTHER;  -- Unknown funct7
-                    end case;
-                when "001" => -- SLL
-                    alu_op <= ALUOP_SL;
-                when "010" => -- SLT
-                    alu_op <= ALUOP_SLT;
-                when "011" => -- SLTU
-                    alu_op <= ALUOP_SLT;  -- For unsigned, the logic might change depending on your implementation
-                when "100" => -- XOR
-                    alu_op <= ALUOP_XOR;
-                when "101" => -- SRL/SRA
-                    case funct7 is
-                        when "0000000" =>  -- SRL
-                            alu_op <= ALUOP_SR;
-                        when "0100000" =>  -- SRA
-                            alu_op <= ALUOP_SR;  -- Adjust according to how you handle SRA
-                        when others => 
-                            alu_op <= ALUOP_OTHER;
-                    end case;
-                when "110" => -- OR
-                    alu_op <= ALUOP_OR;
-                when "111" => -- AND
-                    alu_op <= ALUOP_AND;
-                when others => 
-                    alu_op <= ALUOP_OTHER;
-            end case;
-            
-        -- I-type instructions (Immediate Arithmetic or Load)
-        when "0000011" =>  -- Load (opcode for I-type load instructions)
-            rw      <= '1';  -- write to register
-            wb      <= '1';  -- write-back enabled
-            imm     <= std_logic_vector(to_unsigned(signed(funct3), 20));  -- Example: immediate decoding
-            alu_op  <= ALUOP_ADD; -- ALU operation for load (typically address calculation)
-        
-        when "0010011" =>  -- I-type Arithmetic
-            arith   <= '1';  -- arithmetic operation
-            rw      <= '1';  -- write to register
-            wb      <= '1';  -- write-back enabled
-            imm     <= std_logic_vector(to_unsigned(signed(funct3), 20)); -- Example immediate decoding
-            alu_op  <= ALUOP_ADD; -- ALU operation for arithmetic (ADD, SUB, etc.)
-        
-        -- Branch instructions
-        when "1100011" =>  -- Branch instructions
-            branch  <= '1';  -- enable branching
-            alu_op  <= ALUOP_ADD;  -- comparison typically handled with subtraction (e.g., BEQ, BNE)
-        
-        -- Jump instructions
-        when "1101111" =>  -- Jump (JAL)
-            jump    <= '1';
-            rw      <= '1';  -- write to register (return address)
-            wb      <= '1';  -- write-back enabled
-            alu_op  <= ALUOP_ADD; -- ALU operation for jump (address calculation)
-        
-        -- Default case for unknown opcodes
-        when others => 
-            null;  -- undefined behavior for unknown opcodes
+  if opcode = "0110111"  then
+    alu_op <= ALUOP_ADD; -- LUI
+  elsif opcode = "1101111" then
+    alu_op <= ALUOP_ADD; -- JAL
+  else
+    case opcode&funct3 is
+      when "1100111000" => alu_op <= ALUOP_ADD; -- JALR
+      when "1100011000" => alu_op <= ALUOP_ADD; -- BEQ
+      when "0000011010" => alu_op <= ALUOP_ADD; -- LW
+      when "0100011010" => alu_op <= ALUOP_ADD; -- SW
+      when "0010011000" => alu_op <= ALUOP_ADD; -- ADDI
+      when "0110011000" => alu_op <= ALUOP_ADD; -- ADD, SUB
+      when "0010011010" => alu_op <= ALUOP_SLT; -- SLTI
+      when "0010011011" => alu_op <= ALUOP_SLT; -- SLTIU
+      when "0110011010" => alu_op <= ALUOP_SLT; -- SLT
+      when "0110011011" => alu_op <= ALUOP_SLT; -- SLTU
+      when "0010011001" => alu_op <= ALUOP_SL; -- SLLI
+      when "0110011001" => alu_op <= ALUOP_SL; -- SLL
+      when "0010011101" => alu_op <= ALUOP_SR; -- SRLI, SRAI
+      when "0110011101" => alu_op <= ALUOP_SR; -- SRL, SRA
+      when "0010011100" => alu_op <= ALUOP_XOR; -- XORI
+      when "0110011100" => alu_op <= ALUOP_XOR; -- XOR
+      when "0010011110" => alu_op <= ALUOP_OR; -- ORI
+      when "0110011110" => alu_op <= ALUOP_OR; -- OR
+      when "0010011111" => alu_op <= ALUOP_AND; -- ANDI
+      when "0110011111" => alu_op <= ALUOP_AND; -- AND
+      when others 	  => alu_op <= ALUOP_OTHER;
     end case;
-    
+  end if;
+  
 end process;
+    --arith
+	 with opcode&funct3 select arith <=
+	 funct7(5) when "0110011000",		-- ADD/SUB
+	 funct7(5) when "0110011101",	    -- SRL/SRA
+	 funct7(5) when "0010011101",		-- SRLI/SRAI
+	 '1'		  when "1100011000",	  	-- BEQ 
+	 '1'		  when "0110011010",		-- SLT
+	 '1'	  	  when "0110011011",		-- SLTU
+	 '1'	  	  when "0010011010",		-- SLTI
+	 '1'	  	  when "0010011011",		-- SLTIU
+	 '0'  	  when others;	
+	 
+	 -- unsigned
+	with opcode&funct3 select sign <= 
+	'0'		  when "0110011011",		-- SLTU
+	'0'	  	  when "0010011011",		-- SLTIU
+	'1'		  when others;
+	
+	 --shamt (R/I-TYPE)
+	with opcode&funct3 select shamt <= 		
+    rs2_data_rf(4 downto 0)	  when "0110011001",	-- SLL 
+	rs2_data_rf(4 downto 0)	  when "0110011101",	-- SRL  SRA				 
+	i_instr(24 downto 20)	  when "0010011001",	-- SLLI 
+	i_instr(24 downto 20)	  when "0010011101",	-- SRLI  SRAI	
+	"00000"	  			  when others;
 
 
-    -- ID/EX Pipeline Register: Store instrcution decoded in the ID stage
+-- Define imm according to Figure 3
+    --No imm for R-TYPE
+    i_imm(10 downto 0)  <=  i_instr(30 downto 20);
+	i_imm(31 downto 11) <=  (others => i_instr(31));
+    s_imm(10 downto 0)  <=  i_instr(30 downto 25)&i_instr(11 downto 8)&i_instr(7);
+	s_imm(31 downto 11) <=  (others => i_instr(31));
+    b_imm(11 downto 0)  <=  i_instr(7)&i_instr(30 downto 25)&i_instr(11 downto 8)&'0';
+	b_imm(31 downto 12) <=  (others => i_instr(31));
+	u_imm 	 		    <=  i_instr(31 downto 12)&"000000000000";
+    j_imm(19 downto 0)  <=  i_instr(31)&i_instr(19 downto 12)&i_instr(20)&i_instr(30 downto 25)&i_instr(24 downto 21)&'0';
+	j_imm(31 downto 20) <=  (others => i_instr(31));
+-- Assign imm according to Figure 4
+    -- imm
+	with opcode select imm <=
+	u_imm	when "0110111", -- LUI
+    j_imm	when "1101111",	-- JAL
+    i_imm	when "1100111", -- JALR (I-Type)
+    b_imm	when "1100011",	-- BEQ
+    i_imm	when "0000011",	-- LW
+    s_imm	when "0100011",	-- SW																			
+	i_imm	when "0010011",	-- I-Type	
+	imm 		when others; -- R-TYPE(no imm)
+	
+	--src_imm
+	with opcode select src_imm <=
+	'1'	when "0110111", -- LUI
+    '0'	when "1101111",	-- JAL 
+    '0'	when "1100111", -- JALR (I-Type)
+    '0'	when "1100011",	-- BEQ
+    '1'	when "0000011",	-- LW
+    '1'	when "0100011",	-- SW																			
+	'1'	when "0010011",	-- I-Type	
+	'0' 		when others; -- R-TYPE(no imm)
+-- Branch and jump
+	 	--Branch
+	 with opcode select branch <=
+	 '1' 	  when "1100011",		-- BEQ
+	 '0'		  when others;
+
+	 	-- Jump
+	 with opcode select jump <=
+	 '1'		  when "1101111",	  	-- JAL
+	 '1'		  when "1100111",		-- JALR
+	 '0'		  when others;	
+
+     with jump select o_rs1_data <= 
+	 pc			when '1',
+	 rs1_data_rf	when others; 
+	 
+	 with jump select o_rs2_data <= 
+	 std_logic_vector(to_unsigned(ADDR_INCR, 32))	when '1',
+	 rs2_data_rf 
+     
+        -- JALR
+     with opcode select o_pc <= 
+	 rs1_data_rf  when "1100111", -- JALR
+	 pc			when others;
+-- LOAD and STORE
+      	-- rw
+	 with opcode select rw <=
+	 '1'	  	when "0000011",   -- LW
+	 '0'	 	when others;
+        
+        --we
+	 with opcode select we <= 
+	 '1'		when "0100011",	 -- SW
+	 '0'		when others;
+-- Write Back
+	 	-- wb
+	 with opcode select wb <=
+	 '0'		  when "1100011",	-- BEQ
+	 '0'		  when "0100011",	-- SW
+	 '1'		  when others; 
 
 
+-- ID/EX Pipeline Register from Figure 20 (added we,shamt)
+	process(i_clk, i_rstn, i_flush)
+	begin
+	  if i_rstn = '0' then
+		o_branch <= '0';
+		o_jump <= '0';
+		o_rw <= '0';
+		o_we <= '0';
+		o_wb <= '0';
+		o_arith <= '0';
+		o_sign <= '0';
+		o_imm <= (others => '0');
+		o_src_imm <= '0';
+		o_alu_op <= "000";
+		o_shamt	<= "00000";
+		pc <= i_pc;	    		   -- will be reset by the PC
+		o_rd_addr <= i_rd_addr;  -- will be reset by Writeback
+	  elsif i_flush = '1' then
+	  	o_branch <= '0';
+		o_jump <= '0';
+		o_rw <= '0';
+		o_we <= '0';
+		o_wb <= '0';
+		o_arith <= '0';
+		o_sign <= '0';<
+		o_shamt	<= "00000";
+		o_alu_op <= "000";
+		o_imm <= (others => '0');
+		o_src_imm <= '0';
+
+		pc <= i_pc;	    		   -- will be reset by the PC
+		o_rd_addr <= i_rd_addr;    -- will be reset by Writeback
+	  elsif rising_edge(i_clk) then
+		o_branch <= branch;
+		o_jump <= jump;
+		o_rw <= rw;
+		o_we <= we;
+		o_wb <= wb;
+		o_arith <= arith;
+		o_sign <= sign;
+		o_shamt <= shamt;
+		o_alu_op <= alu_op;
+		o_imm <= imm;
+		o_src_imm <= src_imm;
+		pc <= i_pc;
+		o_rd_addr <= i_rd_addr; 
+		
+		
+	  end if;
+	end process;
 
 end architecture beh;
