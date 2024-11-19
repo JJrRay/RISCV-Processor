@@ -32,170 +32,13 @@ entity riscv_core is
   i_test_mode 	: in  std_logic;	  
   i_tdi 		: in  std_logic;
   o_tdo			: out std_logic;
-  
-  --Test Bench
-  tb_decode_instruction :out std_logic_vector(XLEN-1 downto 0); 
-  tb_fetch_pc 	: out std_logic_vector(XLEN-1 downto 0); 
-    
-  tb_execute_rs1_data, tb_execute_rs2_data, tb_execute_pc: out std_logic_vector(XLEN-1 downto 0);
-  tb_decode_branch,tb_decode_jump, tb_write_back_rw, tb_memory_we, tb_decode_arith, tb_decode_sign: out std_logic;
-  tb_decode_alu_op : out std_logic_vector(ALUOP_WIDTH-1 downto 0);
-  tb_decode_imm : out std_logic_vector(XLEN-1 downto 0);
-  
-  tb_execute_pc_target , tb_execute_alu_result, tb_memory_alu_result, tb_execute_imm: out std_logic_vector(XLEN-1 downto 0);
-  tb_execute_pc_transfert, tb_execute_src_imm 	: out std_logic	;
-  
-  tb_write_back_wb : out std_logic;
-  tb_write_back_rd_addr : out std_logic_vector(REG_WIDTH-1 downto 0);
-  tb_write_back_rd_data : out std_logic_vector(XLEN-1 downto 0); 
-  tb_write_back_load_data : out std_logic_vector(XLEN-1 downto 0);
-  tb_write_back_alu_result : out std_logic_vector(XLEN-1 downto 0);
-  tb_decode_rs1_addr , tb_decode_rs2_addr	: out std_logic_vector(REG_WIDTH-1 downto 0);
-  tb_memory_store_data : out std_logic_vector(XLEN-1 downto 0)
   ); 
   
 end entity riscv_core;
 
 architecture beh of riscv_core is 
 
-component fetch is
-  port (
-  i_target	    : in  std_logic_vector(XLEN-1 downto 0);
-  i_imem_read   : in  std_logic_vector(XLEN-1 downto 0);
-  i_transfert   : in  std_logic;
-  i_stall		: in  std_logic;
-  i_flush		: in  std_logic;
-  i_rstn		: in  std_logic;
-  i_clk    	    : in  std_logic;  
-  
-  o_imem_en 	: out std_logic;
-  o_imem_addr   : out std_logic_vector(XLEN-1 downto 0);	
-  o_pc		    : out std_logic_vector(XLEN-1 downto 0);	
-  o_instruction : out std_logic_vector(XLEN-1 downto 0)
-  );
-end component fetch;
 
-component decode is
-  port (
-  i_instr		: in  std_logic_vector(XLEN-1 downto 0);
-  i_rd_data 	: in  std_logic_vector(XLEN-1 downto 0);
-  i_rd_addr 	: in  std_logic_vector(REG_WIDTH -1 downto 0);  
-  --i_rw 			: in  std_logic;
-  --i_we			: in  std_logic;
-  i_wb 			: in  std_logic;
-  i_pc			: in  std_logic_vector(XLEN-1 downto 0);
-  i_flush		: in  std_logic;
-  i_rstn		: in  std_logic;
-  i_clk 		: in  std_logic;
-  
-  o_rs1_data 	: out std_logic_vector(XLEN-1 downto 0);
-  o_rs2_data 	: out std_logic_vector(XLEN-1 downto 0); 
-  o_branch		: out std_logic;
-  o_jump		: out std_logic;
-  o_rw 			: out std_logic;  -- read word from d-mem
-  o_we			: out std_logic;	-- write enable in d-mem
-  o_wb			: out std_logic;  -- write back in rf
-  o_imm			: out std_logic_vector(XLEN-1 downto 0);  
-  o_src_imm		: out std_logic;
-  o_rd_addr 	: out std_logic_vector(REG_WIDTH-1 downto 0);
-  o_pc			: out std_logic_vector(XLEN-1 downto 0);
-  -- for ALU in EX
-  o_arith		: out std_logic;
-  o_sign		: out std_logic;
-  o_shamt		: out std_logic_vector(4 downto 0);	
-  o_alu_op		: out std_logic_vector(ALUOP_WIDTH-1 downto 0);
-  tb_rs1_addr   : out std_logic_vector(REG_WIDTH-1 downto 0);
-  tb_rs2_addr   : out std_logic_vector(REG_WIDTH-1 downto 0);
-  tb_alu_op		: out std_logic_vector(ALUOP_WIDTH-1 downto 0);
-  tb_arith		: out std_logic;
-  tb_sign		: out std_logic;
-  tb_decode_branch: out std_logic;
-  tb_decode_jump	: out std_logic;
-  tb_imm			: out std_logic_vector(XLEN-1 downto 0)
-  ); 
-  
-end component decode;	 
-
-
-component execute is
-  port ( 						
-  i_jump 			: in  std_logic;
-  i_branch 			: in  std_logic; 
-  i_src_imm			: in  std_logic;
-  i_rw 				: in  std_logic; -- read word from d-mem
-  i_we				: in  std_logic; -- write enable in d-mem	
-  i_wb 				: in  std_logic; -- write back in rf
-  i_rs1_data 		: in  std_logic_vector(XLEN-1 downto 0);
-  i_rs2_data 		: in  std_logic_vector(XLEN-1 downto 0);
-  i_imm				: in  std_logic_vector(XLEN-1 downto 0);
-  i_pc				: in  std_logic_vector(XLEN-1  downto 0);
-  i_rd_addr 		: in  std_logic_vector(REG_WIDTH-1 downto 0);
-  i_stall			: in  std_logic;
-  i_rstn			: in  std_logic;
-  i_clk 			: in  std_logic;
-  -- ALU inputs	from ID
-  i_shamt			: in  std_logic_vector(SHAMT_WIDTH-1 downto 0);
-  i_alu_op			: in  std_logic_vector(ALUOP_WIDTH-1 downto 0);
-  i_arith			: in  std_logic;
-  i_sign			: in  std_logic;
-	
-  o_pc_transfert	: out std_logic;
-  o_alu_result 		: out std_logic_vector(XLEN-1 downto 0);
-  o_store_data 		: out std_logic_vector(XLEN-1 downto 0); 
-  o_pc_target 		: out std_logic_vector(XLEN-1 downto 0);
-  o_rw 				: out std_logic;  -- read word from d-mem
-  o_we				: out std_logic;	-- write enable in d-mem
-  o_wb				: out std_logic;  -- write back in rf
-  o_rd_addr 		: out std_logic_vector(REG_WIDTH-1 downto 0);
-  tb_execute_alu_result: out std_logic_vector(XLEN-1 downto 0);
-  tb_pc_transfert 	: out std_logic;
-  tb_pc_target 		: out std_logic_vector(XLEN-1 downto 0);
-  tb_imm			: out std_logic_vector(XLEN-1 downto 0)
-  ); 
-  
-end component execute;
-
-component memory_access is
-
-  port (
-  i_store_data  		: in  std_logic_vector(XLEN-1 downto 0);
-  i_alu_result  		: in  std_logic_vector(XLEN-1 downto 0);	 
-  i_rd_addr  			: in  std_logic_vector(REG_WIDTH -1 downto 0);  
-  i_rw 		 			: in  std_logic;		
-  i_wb 		 			: in  std_logic;
-  i_we					: in  std_logic;
-  i_rstn 	 			: in  std_logic;
-  i_clk 	 			: in  std_logic; 
-  
-  o_store_data 			: out std_logic_vector(XLEN-1 downto 0);		
-  o_alu_result 			: out std_logic_vector(XLEN-1 downto 0);
-  o_wb 		 			: out std_logic;
-  o_we					: out std_logic;
-  o_rw 					: out std_logic;		
-  o_rd_addr  			: out std_logic_vector(REG_WIDTH -1 downto 0)  
-  );
-end component memory_access;
-
-
-component write_back is
-
-  port (
-  i_load_data	: in  std_logic_vector(XLEN-1 downto 0);
-  i_alu_result 	: in  std_logic_vector(XLEN-1 downto 0);
-  i_rd_addr 	: in  std_logic_vector(REG_WIDTH-1 downto 0);  
-  i_rw 			: in  std_logic;	  
-  i_wb 			: in  std_logic;
-  i_rstn		: in  std_logic;
-  i_clk 		: in  std_logic;
-	
-  o_wb 			: out std_logic;
-  o_rd_addr 	: out std_logic_vector(REG_WIDTH-1 downto 0); 
-  o_rd_data 	: out std_logic_vector(XLEN-1 downto 0)
-  ); 
-  
-end component write_back; 
-
-  
   -- fetch
   signal fetch_instruction, fetch_pc 	: std_logic_vector(XLEN-1 downto 0); 
   -- decode
@@ -221,15 +64,13 @@ begin
 	
 	
 	--dpm
-  --o_imem_en	<= '1';
- -- o_imem_addr  <= fetch_pc;
   o_dmem_en <= '1';
   o_dmem_we	  <= memory_we;
   o_dmem_addr <= memory_alu_result;
   o_dmem_write <= memory_store_data;
   
-  -- Instantiate fetch stage
-  fetch_inst : component fetch
+  -- Instantiate fetch module
+  fetch_inst : component riscv_fetch
     port map (
       i_target => execute_pc_target,
       i_imem_read => i_imem_read,
@@ -246,7 +87,7 @@ begin
     );
 
   -- Instantiate decode stage
-  decode_inst : component decode
+  decode_inst : component riscv_decode
     port map (
       i_instr => fetch_instruction,
       i_rd_data => write_back_rd_data,
@@ -272,11 +113,11 @@ begin
       o_imm => decode_imm,
       o_src_imm => decode_src_imm,
       o_rd_addr => decode_rd_addr,
-      o_pc => decode_pc, -- passthrough for ex
+      o_pc => decode_pc -- passthrough for ex
     );
 
   -- Instantiate execute stage
-  execute_inst : component execute
+  execute_inst : component riscv_execute
     port map (
       i_jump => decode_jump,
       i_branch => decode_branch,
@@ -311,7 +152,7 @@ begin
     );
 
   -- Instantiate memory access stage
-  memory_access_inst : component memory_access
+  memory_access_inst : component riscv_memory_access
     port map (
       i_store_data => execute_store_data,
       i_alu_result => execute_alu_result,
@@ -330,7 +171,7 @@ begin
     );
 
   -- Instantiate write back stage
-  write_back_inst : component write_back
+  write_back_inst : component riscv_write_back
     port map (
       i_load_data => i_dmem_read,
       i_alu_result => memory_alu_result,

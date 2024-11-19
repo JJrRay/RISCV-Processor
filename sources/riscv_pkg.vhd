@@ -110,5 +110,131 @@ package riscv_pkg is
       o_cycles : out std_logic_vector(XLEN-1 downto 0);
       o_insts  : out std_logic_vector(XLEN-1 downto 0));
   end component riscv_perf;
+component riscv_fetch is
+  port (
+  i_target	    : in  std_logic_vector(XLEN-1 downto 0);
+  i_imem_read   : in  std_logic_vector(XLEN-1 downto 0);
+  i_transfert   : in  std_logic;
+  i_stall		: in  std_logic;
+  i_flush		: in  std_logic;
+  i_rstn		: in  std_logic;
+  i_clk    	    : in  std_logic;  
+  o_imem_en 	: out std_logic;
+  o_imem_addr   : out std_logic_vector(XLEN-1 downto 0);
+  -- Pipeline Register	
+  o_pc		    : out std_logic_vector(XLEN-1 downto 0);	
+  o_instruction : out std_logic_vector(XLEN-1 downto 0)
+  );
+end component riscv_fetch;
+
+component riscv_decode is
+  port (
+  i_instr		: in  std_logic_vector(XLEN-1 downto 0);
+  i_rd_data 	: in  std_logic_vector(XLEN-1 downto 0);
+  i_rd_addr 	: in  std_logic_vector(REG_WIDTH -1 downto 0);  
+  i_wb 			: in  std_logic;
+  i_pc			: in  std_logic_vector(XLEN-1 downto 0);
+  i_flush		: in  std_logic;
+  i_rstn		: in  std_logic;
+  i_clk 		: in  std_logic;
+  -- Register File
+  o_rs1_data 	: out std_logic_vector(XLEN-1 downto 0);
+  o_rs2_data 	: out std_logic_vector(XLEN-1 downto 0); 
+  -- Pipeline Register
+  o_branch		: out std_logic;
+  o_jump		: out std_logic;
+  o_rw 			: out std_logic;
+  o_we			: out std_logic;
+  o_wb			: out std_logic; 
+  
+  o_arith		: out std_logic;
+  o_sign		: out std_logic;
+  o_shamt		: out std_logic_vector(SHAMT_WIDTH-1 downto 0);	
+  o_alu_op		: out std_logic_vector(ALUOP_WIDTH-1 downto 0);
+  o_imm			: out std_logic_vector(XLEN-1 downto 0);  
+  o_src_imm		: out std_logic;
+  o_rd_addr 	: out std_logic_vector(REG_WIDTH-1 downto 0);
+  o_pc			: out std_logic_vector(XLEN-1 downto 0)
+  ); 
+  
+end component riscv_decode;	 
+
+
+component riscv_execute is
+  port ( 						
+  i_jump 			: in  std_logic;
+  i_branch 			: in  std_logic; 
+  i_src_imm			: in  std_logic;
+  i_rw 				: in  std_logic; -- read word from d-mem
+  i_we				: in  std_logic; -- write enable in d-mem	
+  i_wb 				: in  std_logic; -- write back in rf
+  i_rs1_data 		: in  std_logic_vector(XLEN-1 downto 0);
+  i_rs2_data 		: in  std_logic_vector(XLEN-1 downto 0);
+  i_imm				: in  std_logic_vector(XLEN-1 downto 0);
+  i_pc				: in  std_logic_vector(XLEN-1  downto 0);
+  i_rd_addr 		: in  std_logic_vector(REG_WIDTH-1 downto 0);
+  i_stall			: in  std_logic;
+  i_rstn			: in  std_logic;
+  i_clk 			: in  std_logic;
+  i_shamt			: in  std_logic_vector(SHAMT_WIDTH-1 downto 0);
+  i_alu_op			: in  std_logic_vector(ALUOP_WIDTH-1 downto 0);
+  i_arith			: in  std_logic;
+  i_sign			: in  std_logic;
+	-- PC Transfer
+  o_pc_transfert	: out std_logic;
+  -- Pipeline Register
+  o_alu_result 		: out std_logic_vector(XLEN-1 downto 0);
+  o_store_data 		: out std_logic_vector(XLEN-1 downto 0); 
+  -- Adder
+  o_pc_target 		: out std_logic_vector(XLEN-1 downto 0);
+  -- To memory
+  o_rw 				: out std_logic; 
+  o_we				: out std_logic;
+  o_wb				: out std_logic;
+  o_rd_addr 		: out std_logic_vector(REG_WIDTH-1 downto 0)
+  ); 
+  
+end component riscv_execute;
+
+component riscv_memory_access is
+
+  port (
+  i_store_data  		: in  std_logic_vector(XLEN-1 downto 0);
+  i_alu_result  		: in  std_logic_vector(XLEN-1 downto 0);	 
+  i_rd_addr  			: in  std_logic_vector(REG_WIDTH -1 downto 0);  
+  i_rw 		 			: in  std_logic;		
+  i_wb 		 			: in  std_logic;
+  i_we					: in  std_logic;
+  i_rstn 	 			: in  std_logic;
+  i_clk 	 			: in  std_logic; 
+  o_store_data 			: out std_logic_vector(XLEN-1 downto 0);		
+  o_alu_result 			: out std_logic_vector(XLEN-1 downto 0);
+  o_wb 		 			: out std_logic;
+  o_we					: out std_logic;
+  o_rw 					: out std_logic;		
+  o_rd_addr  			: out std_logic_vector(REG_WIDTH -1 downto 0)  
+  );
+end component riscv_memory_access;
+
+
+component riscv_write_back is
+
+  port (
+  i_load_data	: in  std_logic_vector(XLEN-1 downto 0);
+  i_alu_result 	: in  std_logic_vector(XLEN-1 downto 0);
+  i_rd_addr 	: in  std_logic_vector(REG_WIDTH-1 downto 0);  
+  i_rw 			: in  std_logic;	  
+  i_wb 			: in  std_logic;
+  i_rstn		: in  std_logic;
+  i_clk 		: in  std_logic;
+  o_wb 			: out std_logic;
+  o_rd_addr 	: out std_logic_vector(REG_WIDTH-1 downto 0); 
+  o_rd_data 	: out std_logic_vector(XLEN-1 downto 0)
+  ); 
+  
+end component riscv_write_back; 
+
+  
+
 
 end package riscv_pkg;
