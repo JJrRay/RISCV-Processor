@@ -78,7 +78,7 @@ begin
       i_rstn => i_rstn, 
       i_clk => i_clk, 
       o_imem_en => o_imem_en,
-	o_imem_addr => o_imem_addr,
+      o_imem_addr => o_imem_addr,
       -- Pipeline Register
       o_pc => fetch_pc, 
       o_instruction => fetch_instruction

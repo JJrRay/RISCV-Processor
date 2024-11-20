@@ -28,7 +28,7 @@ signal pc	:  std_logic_vector(XLEN-1 downto 0);
 
 begin
     -- Memory enable is set to 1 when the instruction memory is being accessed
-    o_imem_en <= '1' when (i_flush = '0' and i_stall = '0' and i_transfert = '1') else '0';
+    o_imem_en <= '1';
   
     -- PC component instantiation
     Program_Counter : component riscv_pc

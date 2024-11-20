@@ -58,10 +58,10 @@ architecture beh of riscv_core is
 begin
 	
 	
-	--dpm
+	--dmem
   o_dmem_en <= '1';
   o_dmem_we	  <= memory_we;
-  o_dmem_addr <= memory_alu_result;
+  o_dmem_addr <= memory_alu_result(MEM_ADDR_WIDTH-1 downto 0);
   o_dmem_write <= memory_store_data;
   
   --flush
