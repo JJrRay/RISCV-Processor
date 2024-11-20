@@ -157,7 +157,7 @@ end process;
     b_imm(11 downto 0)  <=  i_instr(7)&i_instr(30 downto 25)&i_instr(11 downto 8)&'0';
 	b_imm(31 downto 12) <=  (others => i_instr(31));
 	u_imm 	 		    <=  i_instr(31 downto 12)&"000000000000";
-    j_imm(19 downto 0)  <=  i_instr(19 downto 12)&i_instr(20)&i_instr(30 downto 25)&i_instr(24 downto 21)&'0';
+    j_imm(19 downto 0)  <=  i_instr(31)&i_instr(19 downto 12)&i_instr(20)&i_instr(30 downto 25)&i_instr(24 downto 21)&'0';
 	j_imm(31 downto 20) <=  (others => i_instr(31));
 -- Assign imm according to Figure 4
     -- imm

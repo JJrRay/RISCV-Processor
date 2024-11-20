@@ -151,3 +151,5 @@ run -all
 #    Time: 20 ns  Iteration: 0  Instance: /tb_riscv_adder
 # ** Note: o_sum = 0
 #    Time: 20 ns  Iteration: 0  Instance: /tb_riscv_adder
+# End time: 14:32:54 on Oct 23,2024, Elapsed time: 0:11:00
+# Errors: 0, Warnings: 4

@@ -55,7 +55,7 @@ begin
                 o_instruction <= (others => '0');
             elsif i_stall = '0' then
                 -- Normal operation
-		o_imem_addr <= pc(MEM_ADDR_WIDTH-1 downto 0);
+		o_imem_addr <= pc(DEPTH-1 downto 0);
                 o_pc <= pc;  -- Pass program counter
                 o_instruction <= i_imem_read;  -- Fetch
                 -- Stall 

@@ -120,7 +120,7 @@ component riscv_fetch is
   i_rstn		: in  std_logic;
   i_clk    	    : in  std_logic;  
   o_imem_en 	: out std_logic;
-  o_imem_addr   : out std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
+  o_imem_addr   : out std_logic_vector(XLEN-1 downto 0);
   -- Pipeline Register	
   o_pc		    : out std_logic_vector(XLEN-1 downto 0);	
   o_instruction : out std_logic_vector(XLEN-1 downto 0)

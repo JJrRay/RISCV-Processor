@@ -51,7 +51,6 @@ begin
 
   
 	pc_adder: component riscv_adder
-	generic map(N=>XLEN)
     port map(
 	i_a => i_imm,
     i_b => i_pc,
