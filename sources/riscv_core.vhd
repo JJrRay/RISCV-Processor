@@ -29,26 +29,31 @@ end entity riscv_core;
 architecture beh of riscv_core is 
 
 
-  -- fetch
+  -- IF
   signal fetch_instruction, fetch_pc 	: std_logic_vector(XLEN-1 downto 0); 
-  -- decode
+  -- ID
   signal decode_rs1_data, decode_rs2_data, decode_pc, decode_imm	 : std_logic_vector(XLEN-1 downto 0);
   signal decode_branch, decode_jump, decode_rw, decode_we, decode_wb, decode_src_imm, decode_arith,decode_sign: std_logic;   
-  signal decode_rd_addr : std_logic_vector(REG_WIDTH-1 downto 0); 
+  signal decode_rd_addr : std_logic_vector(REG_WIDTH-1 downto 0);
+  signal decode_alu_op : std_logic_vector(ALUOP_WIDTH-1 downto 0); 
   signal decode_shamt : std_logic_vector(4 downto 0);
-  signal decode_alu_op : std_logic_vector(ALUOP_WIDTH-1 downto 0);
-  -- execute
+  
+  -- EX
   signal execute_alu_result, execute_store_data, execute_pc_target : std_logic_vector(XLEN-1 downto 0);
+    signal execute_pc_transfert,execute_flush, execute_rw, execute_we, execute_wb : std_logic;
   signal execute_rd_addr : std_logic_vector(REG_WIDTH-1 downto 0);
-  signal execute_pc_transfert, execute_rw, execute_we, execute_wb : std_logic;
-  -- memory
+
+
+  -- ME
   signal memory_store_data, memory_alu_result : std_logic_vector(XLEN-1 downto 0); 
   signal memory_wb, memory_we, memory_rw : std_logic;
   signal memory_rd_addr : std_logic_vector(REG_WIDTH -1 downto 0);
-  -- write back
+
+  -- WB
   signal write_back_rd_data : std_logic_vector(XLEN-1 downto 0);
-  signal write_back_rd_addr : std_logic_vector(REG_WIDTH-1 downto 0);
   signal write_back_wb : std_logic;
+  signal write_back_rd_addr : std_logic_vector(REG_WIDTH-1 downto 0);
+
   
 begin
 	
@@ -59,6 +64,9 @@ begin
   o_dmem_addr <= memory_alu_result;
   o_dmem_write <= memory_store_data;
   
+  --flush
+  flush <= pc_transfert; -- flush when jump 
+
   -- Instantiate fetch module
   fetch_inst : component riscv_fetch
     port map (
@@ -66,7 +74,7 @@ begin
       i_imem_read => i_imem_read,
       i_transfert => execute_pc_transfert, 
       i_stall => '0', -- no stall
-      i_flush => execute_pc_transfert, -- pc_transfert == flush
+      i_flush => execute_pc_transfert, 
       i_rstn => i_rstn, 
       i_clk => i_clk, 
       o_imem_en => o_imem_en,
@@ -84,7 +92,7 @@ begin
       i_rd_addr => write_back_rd_addr,
       i_wb => write_back_wb, 
       i_pc => fetch_pc,
-      i_flush => execute_pc_transfert, 	 -- pc_transfert == flush 
+      i_flush => execute_pc_transfert, 
       i_rstn => i_rstn, 
       i_clk => i_clk,
       -- Register_File

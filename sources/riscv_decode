@@ -219,7 +219,7 @@ end process;
 	 '1'		  when others; 
 
 
--- ID/EX Pipeline Register from Figure 20 (added we,shamt)
+-- ID/EX Pipeline Register from Figure 20 (added we,shamt, rd_addr (need to settle bewten instr or wb))
 	process(i_clk, i_rstn, i_flush)
 	begin
 	  if i_rstn = '0' then

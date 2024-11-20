@@ -2,38 +2,105 @@ library work;
 use work.riscv_pkg.all;
 
 entity riscv_execute is
-    port (
-    i_rstn : in std_logic;
-    i_clk : in std_logic;
-    o_flush : out std_logic;
-    o_transfer : out std_logic;
-    o_target : out std_logic;
-    o_stall : out std_logic;
-    o_alu_result : out std_logic_vector(out std_logic_vector(XLEN-1 downto 0));
-    o_store_data : out std_logic_vector(XLEN-1 downto 0);
-    i_rs1_data in std_logic_vector(XLEN-1 downto 0);
-    i_rs2_data in std_logic_vector(XLEN-1 downto 0);
-    i_branch : in std_logic;
-    i_jump : in std_logic;
-    i_rw : in std_logic;
-    i_wb : in std_logic;
-    i_arith : in std_logic;
-    i_sign : in std_logic;
-    i_imm : in std_logic_vector(19,0);
-    i_src_imm : in std_logic;
-    i_alu_op :  in std_logic_vector(ALUOP_WIDTH-1 downto 0)
-    i_pc : in std_logic_vector(XLEN-1 downto 0));
+  port ( 						
+  i_jump 			: in  std_logic;
+  i_branch 			: in  std_logic; 
+  i_src_imm			: in  std_logic;
+  i_rw 				: in  std_logic; -- read word from d-mem
+  i_we				: in  std_logic; -- write enable in d-mem	
+  i_wb 				: in  std_logic; -- write back in rf
+  i_rs1_data 		: in  std_logic_vector(XLEN-1 downto 0);
+  i_rs2_data 		: in  std_logic_vector(XLEN-1 downto 0);
+  i_imm				: in  std_logic_vector(XLEN-1 downto 0);
+  i_pc				: in  std_logic_vector(XLEN-1  downto 0);
+  i_rd_addr 		: in  std_logic_vector(REG_WIDTH-1 downto 0);
+  i_stall			: in  std_logic;
+  i_rstn			: in  std_logic;
+  i_clk 			: in  std_logic;
+  i_shamt			: in  std_logic_vector(SHAMT_WIDTH-1 downto 0);
+  i_alu_op			: in  std_logic_vector(ALUOP_WIDTH-1 downto 0);
+  i_arith			: in  std_logic;
+  i_sign			: in  std_logic;
+  -- PC Transfer
+  o_pc_transfert	: out std_logic;
+  -- Pipeline Register
+  o_alu_result 		: out std_logic_vector(XLEN-1 downto 0);
+  o_store_data 		: out std_logic_vector(XLEN-1 downto 0);
+  -- Adder 
+  o_pc_target 		: out std_logic_vector(XLEN-1 downto 0);
+  -- DMEM
+  o_rw 				: out std_logic;  
+  o_we				: out std_logic;	
+  o_wb				: out std_logic;  
+  o_rd_addr 		: out std_logic_vector(REG_WIDTH-1 downto 0)
+  ); 
+  
 end entity riscv_execute;
 
-architecture beh of riscv_execute is
--- Multiplexer + extender into alu_rs2
+architecture beh of riscv_execute is 	
+  
+signal alu_result		: std_logic_vector(XLEN-1 downto 0);
+signal src2_alu			: std_logic_vector(XLEN-1 downto 0);
+signal pc_target		: std_logic_vector(XLEN downto 0);
+signal beq				: std_logic;
+signal pc_transfert		: std_logic;
 
--- Alu instantiation
+begin 
 
--- pc_transfer block
+  
+	pc_adder: component riscv_adder
+    port map(
+	i_a => i_imm,
+    i_b => i_pc,
+    i_sign => '0',
+    i_sub => '0',
+	o_sum => pc_target	 
+	);	
+	-- MUX to select src2_alu
+  with i_src_imm select  src2_alu <=
+  i_imm		 when '1',  
+  i_rs2_data when others;
+  
+  	-- PC transfert
+  with alu_result&i_branch select beq <= 
+  '1'	when "000000000000000000000000000000001",
+  '0'	when others;
 
--- Adder instantiation
-
--- Pipeline Register EX/ME
-
+  pc_transfert <= i_jump or beq;  -- also flush 
+  
+    -- ALU 
+  alu: component riscv_alu
+	  port map(
+	  i_arith => i_arith,
+	  i_sign => i_sign,
+	  i_opcode => i_alu_op,
+	  i_shamt => i_shamt,
+	  i_src1 => i_rs1_data,
+	  i_src2 => src2_alu,
+	  o_res => alu_result
+	  );
+  
+  process(i_clk, i_rstn)
+	begin
+	  if i_rstn = '0' then
+		o_pc_transfert <= '0';
+		o_alu_result   <= alu_result;  -- reset by decode 
+		o_store_data   <= i_rs2_data;  -- won't be stored because we = 0
+		o_pc_target    <= pc_target(XLEN-1 downto 0);   -- handled by pc
+		o_rw 		   <= '0';
+		o_we		   <= '0';
+		o_wb		   <= '0';
+		o_rd_addr	   <= i_rd_addr;   -- handled by rf
+	  elsif rising_edge(i_clk) then	
+		o_pc_transfert <= pc_transfert;	
+		o_alu_result   <= alu_result;
+		o_store_data   <= i_rs2_data;
+		o_pc_target    <= pc_target(XLEN-1 downto 0);  
+		o_rw 		   <= i_rw;
+		o_we		   <= i_we;
+		o_wb		   <= i_wb;
+		o_rd_addr	   <= i_rd_addr;
+	  end if;
+	end process;	
+  
 end architecture beh;
