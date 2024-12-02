@@ -1,4 +1,22 @@
+-------------------------------------------------------------------------------
+-- Project    : ELE8304 : Circuits intégrés à très grande échelle
+-- Polytechnique Montreal
+-------------------------------------------------------------------------------
+-- File       : riscv_core_tb.vhd
 
+-------------------------------------------------------------------------------
+-- Description : TestBench for riscv_core
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-- Commentaire : 
+--						Le mémoire simulee MEM0 n'est adressable que par mot de 32b, 
+--						le compteur de programme (adresse de l'instruction suivante) 
+--						doit donc etre divise par 4 (ou srl 2) avant d'etre connecte
+--						a la memoire.
+--						Bien que le bus d'adressage presente une largeur de 32b,
+--						seul les 9 bits de poids faible de l'adresse sont conserve 
+--						en accord avec la documentation.
+-------------------------------------------------------------------------------
 library ieee; 
 use     ieee.std_logic_1164.all;
 use     ieee.numeric_std.all;
@@ -116,7 +134,7 @@ port map(
 	tb_decode_arith => tb_decode_arith,
 	tb_decode_sign => tb_decode_sign,
 	tb_decode_alu_op => tb_decode_alu_op,
-        tb_decode_imm => tb_decode_imm,
+    tb_decode_imm => tb_decode_imm,
 	
 	tb_execute_pc_target =>  tb_execute_pc_target,
 	tb_execute_alu_result => tb_execute_alu_result,

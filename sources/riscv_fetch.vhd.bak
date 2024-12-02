@@ -1,0 +1,67 @@
+library work;
+use work.riscv_pkg.all;library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+
+entity riscv_fetch is
+    port (
+  i_target	     : in  std_logic_vector(XLEN-1 downto 0);
+  i_imem_read    : in  std_logic_vector(XLEN-1 downto 0);
+  i_transfert    : in  std_logic;
+  i_stall		 : in  std_logic;
+  i_flush		 : in  std_logic;
+  i_rstn		 : in  std_logic;
+  i_clk    	     : in  std_logic;  
+  
+  o_imem_en 	 : out std_logic;
+  o_imem_addr    : out std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);	
+  o_instruction  : out std_logic_vector(XLEN-1 downto 0);
+  o_pc	: out std_logic_vector(XLEN-1 downto 0) -- EX //passthrough
+  );
+end entity riscv_fetch;
+
+
+
+architecture beh of riscv_fetch is
+signal pc	:  std_logic_vector(XLEN-1 downto 0);
+
+begin
+    -- Memory enable is set to 1 when the instruction memory is being accessed
+    o_imem_en <= '1' when (i_flush = '0' and i_stall = '0' and i_transfert = '1') else '0';
+  
+    -- PC component instantiation
+    Program_Counter : component riscv_pc
+	generic map (RESET_VECTOR => 16#00000000#)
+        port map(
+            i_clk => i_clk,
+            i_rstn => i_rstn,
+            i_stall => i_stall,
+            i_transfert => i_transfert,
+            i_target => i_target,
+            o_pc => pc
+        );
+  
+    -- Fetch logic for instruction fetching
+    process(i_clk, i_rstn, i_flush, i_stall)
+    begin
+        if i_rstn = '0' then
+            -- Reset condition: Clear instruction and set PC to 0
+            o_instruction <= (others => '0');
+            o_pc <= (others => '0'); 
+        elsif rising_edge(i_clk) then
+            if i_flush = '1' then
+                -- Flush condition
+                o_instruction <= (others => '0');
+            elsif i_stall = '0' then
+                -- Normal operation
+		o_imem_addr <= pc(MEM_ADDR_WIDTH-1 downto 0);
+                o_pc <= pc;  -- Pass program counter
+                o_instruction <= i_imem_read;  -- Fetch
+                -- Stall 
+                o_instruction <= o_instruction;
+            end if;
+        end if;
+    end process;
+end architecture beh;
+

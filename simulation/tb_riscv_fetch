@@ -1,0 +1,133 @@
+-- Testbench for riscv_fetch entity with Assertions
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity tb_riscv_fetch is
+end entity tb_riscv_fetch;
+
+architecture sim of tb_riscv_fetch is
+
+    -- Constants
+    constant XLEN : integer := 32;  -- Assuming XLEN is 32 bits
+
+    -- Signals
+    signal i_target       : std_logic_vector(XLEN-1 downto 0) := (others => '0');
+    signal i_imem_read    : std_logic_vector(XLEN-1 downto 0) := (others => '0');
+    signal i_transfert    : std_logic := '0';
+    signal i_stall        : std_logic := '0';
+    signal i_flush        : std_logic := '0';
+    signal i_rstn         : std_logic := '0';
+    signal i_clk          : std_logic := '0';
+
+    -- Outputs from riscv_fetch
+    signal o_imem_en      : std_logic;
+    signal o_imem_addr    : std_logic_vector(XLEN-1 downto 0);
+    signal o_instruction  : std_logic_vector(XLEN-1 downto 0);
+    signal o_pc           : std_logic_vector(XLEN-1 downto 0);
+
+    -- Component Declaration for riscv_fetch
+    component riscv_fetch
+        port (
+            i_target     : in std_logic_vector(XLEN-1 downto 0);
+            i_imem_read  : in std_logic_vector(XLEN-1 downto 0);
+            i_transfert  : in std_logic;
+            i_stall      : in std_logic;
+            i_flush      : in std_logic;
+            i_rstn       : in std_logic;
+            i_clk        : in std_logic;
+
+            o_imem_en    : out std_logic;
+            o_imem_addr  : out std_logic_vector(XLEN-1 downto 0);
+            o_instruction : out std_logic_vector(XLEN-1 downto 0);
+            o_pc           : out std_logic_vector(XLEN-1 downto 0)
+        );
+    end component;
+
+    -- Clock generation
+    always begin
+        #5 i_clk <= not i_clk;  -- 10ns period
+    end process;
+
+begin
+
+    -- Instantiate the riscv_fetch component
+    uut: riscv_fetch
+        port map (
+            i_target     => i_target,
+            i_imem_read  => i_imem_read,
+            i_transfert  => i_transfert,
+            i_stall      => i_stall,
+            i_flush      => i_flush,
+            i_rstn       => i_rstn,
+            i_clk        => i_clk,
+            o_imem_en    => o_imem_en,
+            o_imem_addr  => o_imem_addr,
+            o_instruction => o_instruction,
+            o_pc           => o_pc
+        );
+
+    -- Test sequence with assertions
+    process
+    begin
+        -- Test 1: Reset condition
+        i_rstn <= '0';
+        i_flush <= '0';
+        i_stall <= '0';
+        i_transfert <= '0';
+        i_target <= (others => '0');
+        i_imem_read <= (others => '0');
+        wait for 10 ns;
+        
+        -- Assert reset behavior
+        assert (o_instruction = (others => '0')) report "Error: o_instruction not reset" severity error;
+        assert (o_pc = (others => '0')) report "Error: o_pc not reset" severity error;
+
+        -- Release reset
+        i_rstn <= '1';
+        wait for 10 ns;
+
+        -- Test 2: Fetch instruction with no stall or flush
+        i_target <= "00000000000000000000000000000100";  -- Target address 4
+        i_imem_read <= "11111111111111111111111111111111";  -- Fetched instruction (arbitrary)
+        i_transfert <= '1';  -- Enable transfer
+        i_stall <= '0';  -- No stall
+        i_flush <= '0';  -- No flush
+
+        wait for 10 ns;
+
+        -- Assert normal fetch behavior
+        assert (o_pc = i_target) report "Error: PC mismatch during fetch" severity error;
+        assert (o_instruction = i_imem_read) report "Error: Instruction mismatch during fetch" severity error;
+
+        -- Test 3: Apply stall
+        i_stall <= '1';  -- Apply stall
+        wait for 10 ns;
+
+        -- Assert that instruction does not change during stall
+        assert (o_instruction = i_imem_read) report "Error: Instruction changed during stall" severity error;
+
+        -- Test 4: Apply flush
+        i_flush <= '1';  -- Apply flush
+        wait for 10 ns;
+
+        -- Assert flush behavior (instruction should be NOP)
+        assert (o_instruction = (others => '0')) report "Error: Instruction not flushed to NOP" severity error;
+
+        -- Test 5: Release flush and resume normal fetch
+        i_flush <= '0';
+        i_stall <= '0';
+        i_target <= "00000000000000000000000000001000";  -- Target address 8
+        i_imem_read <= "00000000000000000000000000000001";  -- Fetched instruction (arbitrary)
+        wait for 10 ns;
+
+        -- Assert normal fetch behavior again after flush
+        assert (o_pc = i_target) report "Error: PC mismatch after flush" severity error;
+        assert (o_instruction = i_imem_read) report "Error: Instruction mismatch after flush" severity error;
+
+        -- End the simulation
+        wait;
+    end process;
+
+end architecture sim;
