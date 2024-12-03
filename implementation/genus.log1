@@ -1,0 +1,101 @@
+Cadence Genus(TM) Synthesis Solution.
+Copyright 2021 Cadence Design Systems, Inc. All rights reserved worldwide.
+Cadence and the Cadence logo are registered trademarks and Genus is a trademark
+of Cadence Design Systems, Inc. in the United States and other countries.
+
+Version: 21.10-p002_1, built Fri Aug 20 07:13:13 PDT 2021
+Options: 
+Date:    Mon Dec 02 16:12:07 2024
+Host:    vlsi413 (x86_64 w/Linux 4.18.0-553.27.1.el8_10.x86_64) (8cores*8cpus*1physical cpu*Intel(R) Core(TM) i7-9700F CPU @ 3.00GHz 12288KB) (32781480KB)
+PID:     608112
+OS:      Red Hat Enterprise Linux Server release 8.10 (Cerulean Leopard)
+
+Checking out license: Genus_Synthesis
+
+
+***********************************************************************************************************
+***********************************************************************************************************
+
+
+
+Loading tool scripts...Using chipware dir from user defined $CW_DIR envirionment variable set to /CMC/tools/cadence/GENUS21.10.000_lnx86/tools.lnx86/lib/chipware
+
+Finished loading tool scripts (18 seconds elapsed).
+
+WARNING: This version of the tool is 1200 days old.
+@genus:root: 1> report_timing -lint > $::env(SYN_REP_DIR)/compteur.timing_lint.rpt
+Error   : No designs are available. A design must first be read in and elaborated. [TUI-10] [report_timing]
+        : No elaborated designs in memory
+        : A design must first be read in with 'read_hdl' command and elaborated with 'elaborate' command.
+Nothing to report
+1
+@genus:root: 2> source read.tcl
+Sourcing './read.tcl' (Mon Dec 02 16:13:01 EST 2024)...
+#@ Begin verbose source ./read.tcl
+@file(read.tcl) 2: read_hdl -vhdl riscv_pkg.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'riscv_pkg.vhd'.
+        : The input VHDL file cannot be opened.  Make sure that the directory path and file extension (e.g., .vhdl) are specified.
+@file(read.tcl) 3: read_hdl -vhdl riscv_adder.vhd 
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'riscv_adder.vhd'.
+@file(read.tcl) 4: read_hdl -vhdl riscv_pc.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'riscv_pc.vhd'.
+@file(read.tcl) 5: read_hdl -vhdl riscv_rf.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'riscv_rf.vhd'.
+@file(read.tcl) 6: read_hdl -vhdl riscv_alu.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'riscv_alu.vhd'.
+@file(read.tcl) 7: read_hdl -vhdl memory_access.vhd 
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'memory_access.vhd'.
+@file(read.tcl) 8: read_hdl -vhdl fetch.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'fetch.vhd'.
+@file(read.tcl) 9: read_hdl -vhdl decode.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'decode.vhd'.
+@file(read.tcl) 10: read_hdl -vhdl execute.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'execute.vhd'.
+@file(read.tcl) 11: read_hdl -vhdl write_back.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'write_back.vhd'.
+@file(read.tcl) 12: read_hdl -vhdl riscv_core.vhd
+Warning : Cannot open file. [VHDLPT-500]
+        : VHDL source file 'riscv_core.vhd'.
+@file(read.tcl) 14: elaborate riscv_core.vhd
+Error   : Failed to execute command. [LBR-163] [elaborate]
+        : No target technology library was loaded.
+        : Specify libraries using read_libs or read_mmmc.
+UM:   flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   elaborate
+#@ End verbose source ./read.tcl
+1
+@genus:root: 3> elavorate riscv_core
+invalid command name "elavorate"
+@genus:root: 4> elaborate riscv_core
+Error   : Failed to execute command. [LBR-163] [elaborate]
+        : No target technology library was loaded.
+      flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   elaborate
+1
+@genus:root: 5> clear
+@genus:root: 6> source setup.tcl
+Sourcing './setup.tcl' (Mon Dec 02 16:13:41 EST 2024)...
+#@ Begin verbose source ./setup.tcl
+@file(setup.tcl) 1: set_db information_level 9
+  Setting attribute of root '/': 'information_level' = 9
+@file(setup.tcl) 3: set_db hdl_vhdl_read_version 2008
+Error   : Cannot mix VHDL 2008 files with previous VHDL versions. [HPT-88] [set_db]
+        : Retaining previous value of VHDL version '1993'.
+        : Avoid mixing incompatible VHDL versions.
+Error   : Attribute not set. [TUI-21] [set_db]
+        : attribute: 'hdl_vhdl_read_version', object: 'root:'
+        : Cannot set the attribute value.
+#@ End verbose source ./setup.tcl
+1
+@genus:root: 7> exit
+Normal exit.

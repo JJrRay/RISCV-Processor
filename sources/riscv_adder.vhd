@@ -92,14 +92,14 @@ low_b(0)<='0';
 	gen_adder:for i in 0 to N generate 
 
 		first_adder: half_adder port map (a=>extend_a(0),
- 					 	 b=>extend_b(0),
+ 					 	 b=>complement_b(0),
  					 	 sum=>o_sum(0),
  					 	 carry => low_a(0));
 
 		generic_adder : if (i > 0 and i <= N)  generate
 	
 			adder_high: half_adder port map (a=>extend_a(i),
-					     	    b=>extend_b(i),
+					     	    b=>complement_b(i),
 					            sum=>low_b(i),
 					            carry => carry_high(i));
 
