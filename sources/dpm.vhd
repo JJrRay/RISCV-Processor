@@ -4,7 +4,7 @@
 -- File     dpm.vhd
 -- Author   Mickael Fiorentino  <mickael.fiorentino@polymtl.ca>
 -- Lab      GRM - Polytechnique Montreal
--- Date     2019-08-09
+
 -------------------------------------------------------------------------------
 -- Brief    Dual-port memory
 --          1-cycle read, 1-cycle write

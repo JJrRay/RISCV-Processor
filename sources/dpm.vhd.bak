@@ -1,20 +1,12 @@
 -------------------------------------------------------------------------------
 -- Project  ELE8304 : Circuits intégrés à très grande échelle
 -------------------------------------------------------------------------------
--- File     dpm.vhd
--- Author   Mickael Fiorentino  <mickael.fiorentino@polymtl.ca>
--- Lab      GRM - Polytechnique Montreal
--- Date     2019-08-09
--------------------------------------------------------------------------------
--- Brief    Dual-port memory
---          1-cycle read, 1-cycle write
---          Load memory content from file
+
 -------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_textio.all;
-use ieee.std_logic_1164.all;
 
 library std;
 use std.textio.all;
@@ -104,9 +96,7 @@ architecture beh of dpm is
         Lnum := Lnum + 1;
       end loop;
       -- Close init file
-	hread(L, std_logic_vector(next_address_u), read_ok);
-
-      std.textio.file_close(ramfile);
+      file_close(f => ramfile);
     end if;
     return ram;
   end function load_mem;

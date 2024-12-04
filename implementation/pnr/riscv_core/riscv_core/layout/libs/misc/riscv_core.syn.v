@@ -1,0 +1,1 @@
+/export/tmp/8304_9/Labs/lab2/implementation/syn/base_netlist/riscv_core.syn.v

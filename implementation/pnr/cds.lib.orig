@@ -1,0 +1,2 @@
+INCLUDE /export/tmp/8304_9/Labs/lab2/implementation/cds.lib
+DEFINE riscv_core riscv_core
